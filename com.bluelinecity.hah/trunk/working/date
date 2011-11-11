@@ -1,0 +1,13 @@
+//
+// HAH date picker element
+//
+// Requires: js/datepicker.js
+// Usage: !haha/forms/data( id="dob" @value="$dob" )
+
+- $class = "datepicker-dmy"
+- if ( $required )
+	- $class .= " required"
+p
+	label( @for="$id" )= $label
+	input( @class="$class" type="text" size="10" maxlength="10" @id="$id" @name="$id" @value="$value" )
+		

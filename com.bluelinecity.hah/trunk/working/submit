@@ -1,0 +1,5 @@
+// HAH standard submit form element
+// Usage: !haha/forms/submit( id="id" label="label" )
+- $id = ( empty($id) ) ? 'action' : $id;
+- $label = ( empty($label) ) ? 'Submit' : $label;  
+input( type="submit" @id="$id" @name="$id" @value="$label" )
