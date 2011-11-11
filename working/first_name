@@ -1,0 +1,6 @@
+
+- $id = empty($id) ? 'first_name' : $id
+- $label = empty($label) ? 'First Name' : $label
+- $value = empty($value) ? 'df' : $value
+
+!../forms/text( @id="$id" @label="$label" size="30" maxlength="30" @value="$value" )
