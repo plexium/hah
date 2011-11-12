@@ -1,0 +1,19 @@
+// HAH standard text form element
+// Usage: !haha/forms/text( label="Mylabel" width="23" height="23" id="myid" value="my value" class="class" )
+
+p
+	@class=? $class
+	- if ( $label )
+		label( @for="$id" )= $label
+		
+	- if ( !$height || $height == 1 )
+		input( @id="$id" @name="$id" )
+			@value=? $value
+			@size=? $width 
+			
+	- if ( $height && $height > 1 )
+		textarea( @id="$id" @name="$id" @cols="$width" @rows="$height" )= $value
+	 $label
+		label (
+	
+		nothing
