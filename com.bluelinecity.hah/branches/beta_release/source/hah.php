@@ -337,7 +337,7 @@ class HahNode
       
       for ($cnt = 0; $cnt < strlen($str); $cnt++)
       {
-         if ( $str{$cnt} == $l && $str{$cnt-1} != '\\' ) 
+         if ( $str{$cnt} == $l && ($cnt == 0 || $str{$cnt-1} != '\\') ) 
             if ( $tally == -1 ) {$s = $cnt+1; $tally = 1;}
             else $tally++; 
          
@@ -480,7 +480,7 @@ class HahDocument extends HahNode
       		fclose($fp);
       	}
       	
-			$__php = "require('". $this->cached ."');";      	      
+		$__php = "require('". $this->cached ."');";      	      
       }
 		else
 		{
@@ -491,8 +491,15 @@ class HahDocument extends HahNode
       extract( $this->attributes, EXTR_REFS );
       
       ob_start();
+      /*
+      $lines = explode('<br />',highlight_string(implode($this->children), true));
+	  foreach( $lines as $index => $line )
+	  {
+		$lines[$index] = '<br /><span style="width: 100px;">' . ($index+1) . '</span>' . $line;
+	  }
+	  echo implode($lines);
+     */
       eval($__php);
-      //echo highlight_string(implode($this->children));
       return ob_get_clean();      
    }
            
@@ -625,7 +632,7 @@ class HahDocument extends HahNode
    
    private function turnOffEngine( $trigger )
    {
-      $this->engine_mode = ENGINE_OFF;
+      $this->engine_mode = HahDocument::ENGINE_OFF;
       $this->engine_trigger = $trigger;
       $this->engine_trigger_level = $this->current_level - $this->level;
    }
@@ -633,10 +640,10 @@ class HahDocument extends HahNode
    
    private function isEngineOff( $line ) 
    {
-      if ( $this->engine_mode == $this->ENGINE_ON ) return false;
+      if ( $this->engine_mode == HahDocument::ENGINE_ON ) return false;
       
       if ( preg_match( '/^(\t|\s){'. $this->engine_trigger_level .'}' . preg_quote($this->engine_trigger,'/') . '/', $line ) )
-         $this->engine_mode = $this->ENGINE_ON;
+         $this->engine_mode = HahDocument::ENGINE_ON;
         
       $this->cursor->value .= $line;
       
@@ -710,7 +717,7 @@ class HahDocument extends HahNode
       
       //look for php assignment and modifier/filter
       if ( preg_match( '/^(\=)?(\S*)\s+(.*)$/i', $data, $matches) )
-      {         
+      {
          //treat assignment as a vartag
          if ( $matches[1] == '=' )
          {
@@ -757,8 +764,9 @@ class HahDocument extends HahNode
          }
       }
       
-      //chomp off attributes from data line//      
-      $data = substr( $data, strlen($atts[0]) + 2 );
+      //chomp off attributes from data line//
+	  $len = 2 + ( isset($atts[0]) ? strlen($atts[0]) : 0 );
+     $data = substr( $data, $len );
    }
    
    
@@ -938,38 +946,3 @@ class HahTag extends HahNode
       return $output . '</'. $this->name .'>';         
    }         
 }
-
-
-class HahTable extends HahNode 
-{   
-   public function __toString()
-   {
-   	//create a table
-   	$table = new HahTag('table');
-   	
-   	$thead = new HahTag('thead');
-   	$tr = new HahTag('tr');
-   	foreach ( explode(',',$this->name) as $header )
-   		$tr->addChild( new HahTag('th', $header) );
-   	$thead->addChild($tr);
-   	
-   	$table->addChild($thead);
-   	
-   	foreach ( $this->value as $row )
-   	{
-   		$tr = new HahTag('tr');
-   		$tr->set('class',ff('even','odd'));
-   		foreach ( $row as $index => $cell )
-   		{
-   			$td = new HahTag('td',htmlspecialchars($cell));
-   			$tr->addChild($td);
-   		}
-   		$table->addChild($tr);
-   	}
-   	
-   	$this->addChild($table);
-   	
-   	return (string) $table;
-   }         
-}
-
