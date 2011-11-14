@@ -12,12 +12,12 @@ html
     @margin 20px
     @padding= $padding
     
-    !menu.hah
+    //   !menu.hah
     
     .header.wrapper
       - $date = '2011-01-01'
-      h1= My $harry Title
-      h2= $blah
+      h1= "My {$harry} Title"
+      h2=? $blah
       
       //do some coding///
       <?php
@@ -26,10 +26,10 @@ html
     span="M_d,_Y" $date
     span=$ 100.30
     span=# 12345689
-    span=wordwrap all my big long text
+    span=wordwrap "all my big long text"
     #main
       ul#menu.wrapper.bold
-      p=strtoupper My test string
+      p=strtoupper "My test string"
     ul
        li,a( href="http://yahoo.com") Yahoo.com
        li,a( href="http://google.com") google.com
@@ -46,9 +46,9 @@ html
     form( method="post" )
       fieldset
         legend Test Fields
-        !form_elements.hah( label="User Name" id="user_name")
-        !form_elements.hah( label="Password" id="password" @value="$passval" )
-		!haha/forms/date( id="dob" @value="$dob" label="Date of Birth"  required="true"  )
+//        !form_elements.hah( label="User Name" id="user_name")
+//        !form_elements.hah( label="Password" id="password" @value="$passval" )
+//		!haha/forms/date( id="dob" @value="$dob" label="Date of Birth"  required="true"  )
 
 			    
                 
