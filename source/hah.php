@@ -260,6 +260,18 @@ class HahNode
    {
       return isset($this->attributes[$name]) ? $this->attributes[$name] : $default;
    }
+
+   /*
+    * Method: merge
+    * Merges an array passed in with its own attributes array
+    *
+    * Parameters:
+    *    $a - associative array to merge with this node's attributes
+    */
+   public function merge( $a )
+   {
+      $this->attributes = array_merge_recursive( $this->attributes, $a );
+   }
    
    /*
     * Method: getIndent
