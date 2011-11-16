@@ -57,11 +57,13 @@ class HahNode
 	 */
    public $name;
 
+   
    /*
     * Property: value
     * mixed - value of the node instance
     */
    public $value = '';
+   
    
    /*
     * Property: level
@@ -69,17 +71,20 @@ class HahNode
     */
    public $level = 0;
    
+   
    /*
     * Property: attributes
     * array - hash array of node attributes
     */
    public $attributes = array();
 
+   
    /*
     * Property: children
     * array - Array of child objects, usually HahNode based objects  
     */
    public $children = array();
+   
    
    /*
     * Property: parent
@@ -87,11 +92,13 @@ class HahNode
     */
    public $parent = null;
    
+   
    /*
     * Property: sibling
     * int - index of where this node exists among its siblings. 
     */
    public $sibling = null;
+   
    
    /*
     * Constructor
@@ -105,6 +112,7 @@ class HahNode
       $this->name = $name;
       $this->value = $value;
    }
+
    
    /*
     * Method: __toString
@@ -114,6 +122,7 @@ class HahNode
    {
       return $this->value;
    }   
+   
    
    /*
     * Method: setParent
@@ -127,6 +136,7 @@ class HahNode
       $this->parent = $parent;
    }
 
+   
    /*
     * Method: addChild
     * Adds a child object to this node, taking care of setting its parent and sibling order.
@@ -141,6 +151,7 @@ class HahNode
       $this->children[] = $child;
    }
 
+   
    /*
     * Method: setLevel
     * Set's the heirarchy level of the node
@@ -152,6 +163,7 @@ class HahNode
    {
       $this->level = $level;
    }
+   
    
    /*
     * Method: findClosestLevel
@@ -169,6 +181,7 @@ class HahNode
       return $this->parent->findClosestLevel( $level );
    }
    
+   
    /*
     * Method: hasChildren
     * Simple test to check if this node has children
@@ -181,6 +194,7 @@ class HahNode
       return count($this->children);
    }
    
+   
    /*
     * Method: isSingular
     * Returns if this node has no children or just one which in turn has no children. Mainly for formatting.
@@ -192,6 +206,7 @@ class HahNode
    {
       return (count($this->children) == 0 || ( count($this->children) == 1 && $this->children[0]->isSingular()));
    }
+   
    
    /*
     * Method: getChildren
@@ -208,6 +223,7 @@ class HahNode
       return implode( $sep, $this->children );
    }
 
+   
    /*
     * Method: getSibling
     * Returns a node's sibling using $offset as a linear locator
@@ -225,6 +241,7 @@ class HahNode
       else
          return $this->parent->children[ $this->sibling + $offset ];
    }
+   
    
    /*
     * Method: set 
@@ -245,6 +262,7 @@ class HahNode
          $this->attributes[$args[0]] = $args[1];
    }
 
+   
    /*
     * Method: get
     * Returns the value of a named attribute for this node
@@ -261,6 +279,7 @@ class HahNode
       return isset($this->attributes[$name]) ? $this->attributes[$name] : $default;
    }
 
+   
    /*
     * Method: merge
     * Merges an array passed in with its own attributes array
@@ -273,6 +292,7 @@ class HahNode
       $this->attributes = array_merge_recursive( $this->attributes, $a );
    }
    
+   
    /*
     * Method: getIndent
     * Returns a string of spaces or tabs based on this nodes nest level. For code formatting.
@@ -284,6 +304,7 @@ class HahNode
    {
       return str_repeat(HAH_INDENT, $this->level );
    }
+   
    
    /*
     * Method: toArray
@@ -305,6 +326,7 @@ class HahNode
       else
          return $this->value;
    }
+   
    
    /*
     * Method: pick
@@ -500,21 +522,21 @@ class HahDocument extends HahNode
 			$__php = '?>' . implode($this->children) . '<?php ';
 		}  
 		       
-      extract( $this->attributes, EXTR_REFS );
+      extract( $this->attributes, EXTR_REFS );      
       
       ob_start();
-      /*
-      $lines = explode('<br />',highlight_string(implode($this->children), true));
-	  foreach( $lines as $index => $line )
-	  {
-		$lines[$index] = '<br /><span style="width: 100px;">' . ($index+1) . '</span>' . $line;
-	  }
-	  echo implode($lines);
-     */
-      eval($__php);
+      $__result = eval($__php);
+      if ( $__result === false )
+      {                           
+         $lines = explode('<br />', highlight_string($__php, true));
+         foreach ( $lines as $i => $line )
+            $lines[$i] = '<span>' . str_pad($i,5,'0',STR_PAD_LEFT) . '&nbsp;</span>' . $line;
+         echo '<br />' . implode('<br />', $lines); 
+      }
+      
       return ob_get_clean();      
    }
-           
+   
    
    public function findClosestLevel( $level )
    {
@@ -543,18 +565,7 @@ class HahDocument extends HahNode
       {
          $node = new HahTag('img');
          $node->set('src', $matches[1] );
-      }
-        
-      elseif ( preg_match('/\.csv$/', $matches[1] ))
-      {       	
-      	//$fp = fopen($matches[1],'r');
-      	//$header = fgetcsv($fp);
-      	$node = new HahTable('colors,code',array(
-      		array('red','#0000ff'),
-      		array('green','#ff0000'),
-      		array('blue','#00ff00'),
-      	));         
-      }  
+      }        
       else 
       {          
          $node = new HahSubDocument( dirname( $this->name ) . DIRECTORY_SEPARATOR . trim($matches[1]) );
