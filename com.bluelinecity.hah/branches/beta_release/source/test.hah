@@ -16,7 +16,7 @@ html
     
     .header.wrapper
       - $date = '2011-01-01'
-      h1= "My {$harry} Title"
+      h1= "My {$harry} Title 22"
       h2=? $blah
       
       //do some coding///

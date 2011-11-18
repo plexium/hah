@@ -7,10 +7,10 @@ HAH - Hah Ain't Haml
 [x] - change includes to be more runtime ( passed values can't be changed in parent include ) 
 [x] - add multiple fall back to ? option ie div=? $error,$default,"blah"
 [x] - fix if/else syntax
+[x] - added caching
 
 TODO
 - add some ability to debug
-- look into caching
 - syntax checking 
 - create a demo that illustrates hah
 - maybe add extra ! for php, html, csv, xsl, dir ( include-it-all )

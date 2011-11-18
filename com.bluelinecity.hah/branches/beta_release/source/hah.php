@@ -44,6 +44,10 @@ if ( !defined('HAH_VERSION') )
 if ( !defined('HAH_CACHE') ){}
    //then don't do anything
    
+if ( !defined('HAH_DEBUG') )
+   define('HAH_DEBUG',false);
+   
+   
    
 /*
  * Class: HahNode
@@ -416,18 +420,64 @@ class HahNode
 }
 
 
+/*
+ * Class: HahDocument
+ * The frontend class for using HAH to render files. This represents a single HAH document
+ * which is loaded then queried to return a rendered file.
+ */
 class HahDocument extends HahNode 
 {
-   
+
+   /*
+    * Constant: ENGINE_ON
+    * int - used to indicate if the parsing engine is on.
+    */
    const ENGINE_ON = 0;
+
+   /*
+    * Constant: ENGINE_OFF
+    * int - used to indicate if the parsing engine is off.
+    */   
    const ENGINE_OFF = 1;
-         
-   private $engine_mode = 0;   
+
+   /*
+    * Property: engine_mode
+    * int - state variable of the current parser <ENGINE_ON>, <ENGINE_OFF>
+    */
+   private $engine_mode = 0;
+
+   /*
+    * Property: engine_trigger
+    * string - pattern to look for before turning the engine back on
+    */
    private $engine_trigger = '';  
-   private $cursor;         
+   
+   /*
+    * Property: cursor
+    * HahNode object - reference to the current node being worked on.
+    */
+   private $cursor;
+
+   /*
+    * Property: current_level
+    * int - numerical depth of the current node we're processing
+    */
    private $current_level = 0;
+   
+   /*
+    * Property: cached
+    * string - filename of the cache file if one.
+    */
    private $cached = null;
    
+   
+   /*
+    * Constructor
+    * Creates a HahDocument checking for a cached document based on an MD5 hash of the file's contents.
+    * 
+    * Parameters:
+    * 	$file - string, path to the hah document to load and render.
+    */
    public function __construct( $file )
    {
       if ( !file_exists( $file) ) die( 'HAH Compiler Error: No such file ' . $file );
@@ -435,11 +485,19 @@ class HahDocument extends HahNode
       $this->name = $file;
       $this->value = file( $this->name );
       
-      if ( defined('HAH_CACHE') )
+      //if cache is set then look for a cached file//
+      if ( defined('HAH_CACHE') && !HAH_DEBUG )
          $this->cached = HAH_CACHE . md5(implode($this->value)) . '.php';         
    }
 
    
+   /*
+    * Method: compile
+    * Does a line-by-line file parse of the currently loaded hah document and creates the composite
+    * HahNode tree.
+    * 
+    * 
+    */
    public function compile()
    {
       //parse hah file into a valid node tree//
@@ -501,32 +559,40 @@ class HahDocument extends HahNode
    }
  
    
+   /*
+    * Method: __toString
+    * Compiles and executes the hah document returning the results.
+    * 
+    * Return:
+    * 	String of post-parsed php code.
+    */
    public function __toString()
    {
       //look for cached php//
-      if ( defined('HAH_CACHE') )
+      if ( defined('HAH_CACHE') && !HAH_DEBUG )
       {      	
-      	if ( !file_exists( $this->cached ) )
-      	{
-      		$this->compile();
-      		$fp = fopen($this->cached,'w');
-      		fwrite($fp, implode($this->children));
-      		fclose($fp);
-      	}
-      	
-		$__php = "require('". $this->cached ."');";      	      
+         if ( !file_exists( $this->cached ) )
+         {
+            $this->compile();
+            $fp = fopen($this->cached,'w');
+            fwrite($fp, implode($this->children));
+            fclose($fp);
+         }
+	
+         $__php = "require('". $this->cached ."');";      	      
       }
-		else
-		{
-	      $this->compile();
-			$__php = '?>' . implode($this->children) . '<?php ';
-		}  
+      else
+      {
+         $this->compile();
+         $__php = '?>' . implode($this->children) . '<?php ';
+      }  
 		       
       extract( $this->attributes, EXTR_REFS );      
       
       ob_start();
       $__result = eval($__php);
-      if ( $__result === false )
+      
+      if ( $__result === false && HAH_DEBUG )
       {                           
          $lines = explode('<br />', highlight_string($__php, true));
          foreach ( $lines as $i => $line )
@@ -538,12 +604,32 @@ class HahDocument extends HahNode
    }
    
    
+   /*
+    * Method: findClosestLevel
+    * Returns this document since it is the top of the top.
+    * 
+    * Parameters:
+    * 	$level - int, but really doesn't do anything in this class
+    * 
+    * Return:
+    * 	HahDocument - this
+    */
    public function findClosestLevel( $level )
    {
       return $this;
    }    
    
    
+   /*
+    * Method: addImportNode
+    * Handles the haha import command (!). Is able to create nodes to handle the following file types:
+    *
+    * Import Types:
+    * 	js - creates html script tags
+    * 	css - creates css link tags
+    * 	jpg,png,jpeg,gif - creates image tags
+    * 	* - treats as another HAH document
+    */
    private function addImportNode( $data )
    {
       preg_match('/^([^\(]*)(.*)$/', trim($data), $matches );
@@ -575,10 +661,13 @@ class HahDocument extends HahNode
       $this->addNode( $node );
    }
    
-   /**
-    * @method addAttribute
-    * Sets the attribute of the current node using the data passed. ( @att= value )
-    * @param string $data - the hah data line for the attribute.
+   
+   /*
+    * Method: addAttribute    
+    * Handles the HAH Attribute command (@) for parent tags
+    * 
+    * Parameters:
+    * 	$data - string, the hah line in question
     */
    private function addAttribute( $data )
    {
@@ -614,6 +703,14 @@ class HahDocument extends HahNode
    }
    
    
+   /*
+    * Method: addRawNode
+    * Handles raw node blocks in HAH files like html tags, php code and special case HTML doctypes,
+    * Also turns the parsing engine off and sets the trigger for when it needs to turn back on.
+    * 
+    * Parameters:
+    * 	$data - string, line from the hah document 
+    */
    private function addRawNode( $data )
    {
       preg_match('/^([a-z0-9_\-\?\!]+)/i', $data, $matches);
@@ -653,6 +750,13 @@ class HahDocument extends HahNode
    }
   
    
+   /*
+    * Method: turnOffEngine
+    * Handles turning off the parse engine and setting the trigger for when it comes back on.
+    * 
+    * Parameters:
+    * 	$trigger - string, pattern to look for to turn the engine back on.
+    */
    private function turnOffEngine( $trigger )
    {
       $this->engine_mode = HahDocument::ENGINE_OFF;
@@ -661,6 +765,14 @@ class HahDocument extends HahNode
    }
    
    
+   /*
+    * Method: isEngineOff
+    * Determines the state of the engine and returns true if it's off, false otherwise. Also
+    * handles checking the trigger to see if it should turn back on.
+    * 
+    * Parameters:
+    * 	$line - 
+    */
    private function isEngineOff( $line ) 
    {
       if ( $this->engine_mode == HahDocument::ENGINE_ON ) return false;
