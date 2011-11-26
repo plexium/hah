@@ -768,10 +768,13 @@ class HahDocument extends HahNode
    /*
     * Method: isEngineOff
     * Determines the state of the engine and returns true if it's off, false otherwise. Also
-    * handles checking the trigger to see if it should turn back on.
+    * handles checking the trigger to see if it should turn back on and does so if needed.
     * 
     * Parameters:
-    * 	$line - 
+    * 	$line - string, the currently processing HAH line. 
+    * 
+    * Return:
+    * 	Boolean
     */
    private function isEngineOff( $line ) 
    {
@@ -786,6 +789,13 @@ class HahDocument extends HahNode
    }
 
    
+   /*
+    * Method: addCodeBlockNode
+    * Adds a <HahCodeBlock> node to the tree with the data passed to it.
+    * 
+    * Parameters:
+    * 	$data - string, data for the raw code node
+    */
    private function addCodeBlockNode( $data )
    {
       $node = new HahCodeBlock();
@@ -802,6 +812,14 @@ class HahDocument extends HahNode
    }
    
    
+   /*
+    * Method: addNode
+    * General purpose method to add a node to the tree taking into account
+    * the indent level and updating the cursor appropriatly
+    * 
+    *  Parameters:
+    *  	$node - HahNode to add
+    */
    private function addNode( $node )
    {      
       //navigate the tree to find the correct parent//
@@ -818,6 +836,10 @@ class HahDocument extends HahNode
    }
 
 
+   /*
+    * Method: addTagNode
+    * 
+    */
    private function addTagNode( $tag, $data )
    {
       $node = new HahTag( $tag );
