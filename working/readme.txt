@@ -8,12 +8,12 @@ HAH - Hah Ain't Haml
 [x] - add multiple fall back to ? option ie div=? $error,$default,"blah"
 [x] - fix if/else syntax
 [x] - added caching
+[x] - add some ability to debug
 
 TODO
-- add some ability to debug
 - syntax checking 
 - create a demo that illustrates hah
-- maybe add extra ! for php, html, csv, xsl, dir ( include-it-all )
+- maybe add extra ! for csv, xsl, dir ( include-it-all )
 
 
 Haha - HAH Assets

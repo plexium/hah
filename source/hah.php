@@ -932,7 +932,7 @@ class HahDocument extends HahNode
       
       //chomp off attributes from data line//
 	  $len = 2 + ( isset($atts[0]) ? strlen($atts[0]) : 0 );
-     $data = substr( $data, $len );
+      $data = substr( $data, $len );
    }
    
    

@@ -1,0 +1,1 @@
+perl c:\naturaldocs\NaturalDocs -i . -o HTML ..\docs -p ..
