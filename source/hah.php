@@ -838,7 +838,7 @@ class HahDocument extends HahNode
 
    /*
     * Method: addTagNode
-    * 
+    * Adds a TagNode object to the document tree at the current cursor.
     */
    private function addTagNode( $tag, $data )
    {
