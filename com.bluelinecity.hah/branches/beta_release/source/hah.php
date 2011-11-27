@@ -651,7 +651,11 @@ class HahDocument extends HahNode
       {
          $node = new HahTag('img');
          $node->set('src', $matches[1] );
-      }        
+      }
+      elseif ( preg_match('/\.(php|html)$/', $matches[1] ))
+      {
+         $node = new HahCodeBlock( null, "include('". $matches[1] ."');" );
+      }
       else 
       {          
          $node = new HahSubDocument( dirname( $this->name ) . DIRECTORY_SEPARATOR . trim($matches[1]) );
@@ -811,7 +815,7 @@ class HahDocument extends HahNode
       }
    }
    
-   
+
    /*
     * Method: addNode
     * General purpose method to add a node to the tree taking into account
@@ -839,6 +843,10 @@ class HahDocument extends HahNode
    /*
     * Method: addTagNode
     * Adds a TagNode object to the document tree at the current cursor.
+    * 
+    * Parameters:
+    *    $tag - the tag name to create
+    *    $data - the rest of the tag options as specified in the hah line
     */
    private function addTagNode( $tag, $data )
    {
@@ -894,14 +902,15 @@ class HahDocument extends HahNode
    }
 
 
-   /**
-    * 
+   /*
+    * Method: _parseAddAttributes
     * Parses a string off attribute=value pairs and applies them to the node given. It modifies
     * the data string by reference and has special handling for passing values by refrence for 
     * child hahdocuments.
-    * @param $data
-    * @param $node
-    * @param $passthru
+    *
+    * Parameters:
+    *    $data - reference string, attributes to parse out
+    *    $node - node to apply the attributes too
     */
    private function _parseAddAttributes( &$data, $node )
    {
@@ -927,10 +936,13 @@ class HahDocument extends HahNode
    }
    
    
-   /**
-    * addAssignmentFilter - add a filter to a HahVarTag node such as $,#,date format, etc
-    * @param $node - object reference to the HahVarTag node filters are to be assigned to
-    * @param $filters - string of the filters found in the hah file.
+   /*
+    * Method: addAssignmentFilter
+    * Add an output filter to a HahVarTag node such as ?,$,#,date format.
+    *
+    * Parameters:
+    *    $node - object reference to the HahVarTag node filters are to be assigned to
+    *    $filters - string of the filters found in the hah file.
     */
    public function addAssignmentFilter( $node, $filters )
    {
@@ -960,9 +972,12 @@ class HahDocument extends HahNode
 
 
 
-/**
- * A class node representing a single php variable/string being echoed
- * div= $varname, div= "This is my var $name"
+/*
+ * Class: HahVarTag
+ * A class node representing a single php variable/string being echoed. 
+ *
+ * Example:
+ *    div= $varname, div= "This is my var $name"
  */
 class HahVarTag extends HahNode 
 {
@@ -1002,11 +1017,11 @@ class HahVarTag extends HahNode
       
       return '<?php echo ' . $code .'; ?>';
    }  
-   
 }
 
 
-/**
+/*
+ * Class: HahCodeBlock
  * A class node representing a php block such as if, while or foreach or just a line
  */
 class HahCodeBlock extends HahNode {
@@ -1030,19 +1045,19 @@ class HahCodeBlock extends HahNode {
  	     
       return $output;
    }
-   
 }
 
 
-/**
+/*
+ * Class: HahRaw
  * Represents a node of raw code. Just returns its value.
  */
 class HahRaw extends HahNode {}
 
 
-/**
- * 
- * Represents an included hah document node
+/*
+ * Class: HahSubDocument 
+ * Represents an included hah document node. Outputs all the code required to create a new hahdocument.
  *
  */
 class HahSubDocument extends HahNode
@@ -1064,7 +1079,8 @@ class HahSubDocument extends HahNode
 }
 
 
-/**
+/*
+ * Class: HahTag
  * The most common type of node, representing an HTML/XML tag.
  */
 class HahTag extends HahNode 

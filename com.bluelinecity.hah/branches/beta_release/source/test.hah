@@ -37,7 +37,12 @@ html
     it's going to continue in this 
     faction until  i'm done
     </p>  
-      
+
+    div
+      !test.php
+    div
+      !test.html
+    
     - if ( 1 == 1 )
       p 1 equals 1... that's great!
     
