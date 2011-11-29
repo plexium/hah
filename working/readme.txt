@@ -87,3 +87,25 @@ html
 </body>
 </html>
 
+html
+  head
+    title My Hah Page
+  body
+    h1 My <b>Heading</b>
+    <p>
+      This is a big paragraph which is going to span mutliple lines
+      
+    </p>
+
+  
+  
+  
+<html>
+  <head>
+     <title>My Hah page</title>
+  </head>
+  <body>
+     <h1> My heading
+  </body>
+</html>
+  

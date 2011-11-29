@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Package: HAH Parser
  * 
  * Description:
