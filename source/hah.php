@@ -39,7 +39,7 @@ if ( !defined('HAH_NONE_SINGLE_TAGS') )
    define('HAH_NONE_SINGLE_TAGS',"/script|iframe|textarea/i");
 
 if ( !defined('HAH_VERSION') )
-   define('HAH_VERSION',"0.9");
+   define('HAH_VERSION',"1.0");
 
 if ( !defined('HAH_CACHE') ){}
    //then don't do anything
