@@ -1,0 +1,1 @@
+This is a <?php echo 'test'; ?> of the include
