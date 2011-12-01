@@ -7,13 +7,13 @@ HAH - Hah Ain't Haml
 [x] - change includes to be more runtime ( passed values can't be changed in parent include ) 
 [x] - add multiple fall back to ? option ie div=? $error,$default,"blah"
 [x] - fix if/else syntax
+[x] - added caching
+[x] - add some ability to debug
 
 TODO
-- add some ability to debug
-- look into caching
 - syntax checking 
 - create a demo that illustrates hah
-- maybe add extra ! for php, html, csv, xsl, dir ( include-it-all )
+- maybe add extra ! for csv, xsl, dir ( include-it-all )
 
 
 Haha - HAH Assets
@@ -87,3 +87,25 @@ html
 </body>
 </html>
 
+html
+  head
+    title My Hah Page
+  body
+    h1 My <b>Heading</b>
+    <p>
+      This is a big paragraph which is going to span mutliple lines
+      
+    </p>
+
+  
+  
+  
+<html>
+  <head>
+     <title>My Hah page</title>
+  </head>
+  <body>
+     <h1> My heading
+  </body>
+</html>
+  
