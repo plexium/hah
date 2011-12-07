@@ -1,0 +1,60 @@
+//hah testing file
+- $color = '#' . $color 
+html
+  head
+    <script type="javascript">
+      function mesg( weird )
+      {
+        alert("hi " + weird );
+      }
+    </script>    
+  body( bgcolor="#eeeeee" @color='$color' onload="settimeout('blah',100)" )
+    @margin 20px
+    @padding= $padding
+    
+    //   !menu.hah
+    
+    .header.wrapper
+      - $date = '2011-01-01'
+      h1= "My {$harry} Title 22"
+      h2=? $blah,34
+      	@class=? $blah
+      
+      //do some coding///
+      <?php
+         echo 'some raw code here';
+      ?>
+    span="M_d,_Y" $date
+    span=$ 100.30
+    span=# 12345689
+    span=wordwrap "all my big long text"
+    #main
+      ul#menu.wrapper.bold
+      p=strtoupper "My test string"
+    ul
+       li,a( href="http://yahoo.com") Yahoo.com
+       li,a( href="http://google.com") google.com
+    <p> This is my paragraph and 
+    it's going to continue in this 
+    faction until  i'm done
+    </p>  
+
+    div
+      !test.php
+    div
+      !test.html
+    
+    - if ( 1 == 1 )
+      p 1 equals 1... that's great!
+    
+    .error=?wordwrap,nl2br $error
+    
+    form( method="post" )
+      fieldset
+        legend Test Fields
+//        !form_elements.hah( label="User Name" id="user_name")
+//        !form_elements.hah( label="Password" id="password" @value="$passval" )
+//		!haha/forms/date( id="dob" @value="$dob" label="Date of Birth"  required="true"  )
+
+			    
+                
