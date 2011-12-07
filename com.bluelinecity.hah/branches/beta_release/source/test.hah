@@ -17,7 +17,8 @@ html
     .header.wrapper
       - $date = '2011-01-01'
       h1= "My {$harry} Title 22"
-      h2=? $blah
+      h2=? $blah,34
+      	@class=? $blah
       
       //do some coding///
       <?php
