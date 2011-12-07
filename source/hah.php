@@ -39,7 +39,7 @@ if ( !defined('HAH_NONE_SINGLE_TAGS') )
    define('HAH_NONE_SINGLE_TAGS',"/script|iframe|textarea/i");
 
 if ( !defined('HAH_VERSION') )
-   define('HAH_VERSION',"1.0");
+   define('HAH_VERSION',"1.1");
 
 if ( !defined('HAH_CACHE') ){}
    //then don't do anything
@@ -593,14 +593,28 @@ class HahDocument extends HahNode
       $__result = eval($__php);
       
       if ( $__result === false && HAH_DEBUG )
-      {                           
-         $lines = explode('<br />', highlight_string($__php, true));
-         foreach ( $lines as $i => $line )
-            $lines[$i] = '<span>' . str_pad($i,5,'0',STR_PAD_LEFT) . '&nbsp;</span>' . $line;
-         echo '<br />' . implode('<br />', $lines); 
-      }
+         echo $this->getSource( $__php );
       
       return ob_get_clean();      
+   }
+   
+   
+   /*
+    * Method: formatSource
+    * Takes a string and formats and adds line-numbers for use in viewing the source of compiled HAH code
+    * 
+    * Parameters:
+    * 	$code - the php to format
+    * 
+    * Return:
+    * 	string - html formatted code ready for echoing
+    */
+   public function formatSource( $code )
+   {
+      $lines = explode('<br />', highlight_string($code, true));
+      foreach ( $lines as $i => $line )
+         $lines[$i] = '<span>' . str_pad($i,5,'0',STR_PAD_LEFT) . '&nbsp;</span>' . $line;
+      echo '<br />' . implode('<br />', $lines);       
    }
    
    
@@ -1011,8 +1025,8 @@ class HahVarTag extends HahNode
       if ( !empty($this->attributes['no_empty_attribute']) )
       {
          $code = 'HahNode::pick(' . $code . ')';
-         $code = 'htmlentities(' . $code . ', ENT_QUOTES)';
-         $code = '(empty(' . $origin . ')?\'\':\' ' . $this->attributes['no_empty_attribute'] . '="\'.' . $code . '.\'"\')';
+         //$code = 'htmlentities(' . $code . ', ENT_QUOTES)';
+         $code = '((' . $code . ' == \'\')?\'\':\' ' . $this->attributes['no_empty_attribute'] . '="\'.htmlentities(' . $code . ', ENT_QUOTES).\'"\')';
       }
       
       return '<?php echo ' . $code .'; ?>';
