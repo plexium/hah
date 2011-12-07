@@ -1,0 +1,32 @@
+<!html
+html
+  head
+    title My example page
+    !styles.css
+    !functions.js
+
+  body
+    #page
+       #header
+         !banner.png( border="0" alt="My example Page" )
+         !topmenu.hah( color="#fff" )
+           @pagetype= $pagetype
+
+         #message=? $special_message
+
+       #main.left
+         h1= $welcome_message
+         p Here's a list pages on the site
+         ul
+           - foreach ( $pages as $page )
+             li= $page
+
+       #footer
+         <p>
+            This is the <em>footer</em> for my example page.
+         </p>
+
+  ? ( $loggedin )
+    span= "You are logged in as " . $username
+  :
+    a( href="login" ) Login Here
