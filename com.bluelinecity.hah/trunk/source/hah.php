@@ -940,6 +940,9 @@ class HahTag extends HahNode
 }
 
 
+/*
+ * Class: HahTable
+ */
 class HahTable extends HahNode 
 {   
    public function __toString()
@@ -972,4 +975,3 @@ class HahTable extends HahNode
    	return (string) $table;
    }         
 }
-
