@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Package: HAH Parser
  * 
  * Description:
@@ -39,10 +39,14 @@ if ( !defined('HAH_NONE_SINGLE_TAGS') )
    define('HAH_NONE_SINGLE_TAGS',"/script|iframe|textarea/i");
 
 if ( !defined('HAH_VERSION') )
-   define('HAH_VERSION',"0.9");
+   define('HAH_VERSION',"1.1");
 
 if ( !defined('HAH_CACHE') ){}
    //then don't do anything
+   
+if ( !defined('HAH_DEBUG') )
+   define('HAH_DEBUG',false);
+   
    
    
 /*
@@ -57,11 +61,13 @@ class HahNode
 	 */
    public $name;
 
+   
    /*
     * Property: value
     * mixed - value of the node instance
     */
    public $value = '';
+   
    
    /*
     * Property: level
@@ -69,17 +75,20 @@ class HahNode
     */
    public $level = 0;
    
+   
    /*
     * Property: attributes
     * array - hash array of node attributes
     */
    public $attributes = array();
 
+   
    /*
     * Property: children
     * array - Array of child objects, usually HahNode based objects  
     */
    public $children = array();
+   
    
    /*
     * Property: parent
@@ -87,11 +96,13 @@ class HahNode
     */
    public $parent = null;
    
+   
    /*
     * Property: sibling
     * int - index of where this node exists among its siblings. 
     */
    public $sibling = null;
+   
    
    /*
     * Constructor
@@ -105,6 +116,7 @@ class HahNode
       $this->name = $name;
       $this->value = $value;
    }
+
    
    /*
     * Method: __toString
@@ -114,6 +126,7 @@ class HahNode
    {
       return $this->value;
    }   
+   
    
    /*
     * Method: setParent
@@ -127,6 +140,7 @@ class HahNode
       $this->parent = $parent;
    }
 
+   
    /*
     * Method: addChild
     * Adds a child object to this node, taking care of setting its parent and sibling order.
@@ -141,6 +155,7 @@ class HahNode
       $this->children[] = $child;
    }
 
+   
    /*
     * Method: setLevel
     * Set's the heirarchy level of the node
@@ -152,6 +167,7 @@ class HahNode
    {
       $this->level = $level;
    }
+   
    
    /*
     * Method: findClosestLevel
@@ -169,6 +185,7 @@ class HahNode
       return $this->parent->findClosestLevel( $level );
    }
    
+   
    /*
     * Method: hasChildren
     * Simple test to check if this node has children
@@ -181,6 +198,7 @@ class HahNode
       return count($this->children);
    }
    
+   
    /*
     * Method: isSingular
     * Returns if this node has no children or just one which in turn has no children. Mainly for formatting.
@@ -192,6 +210,7 @@ class HahNode
    {
       return (count($this->children) == 0 || ( count($this->children) == 1 && $this->children[0]->isSingular()));
    }
+   
    
    /*
     * Method: getChildren
@@ -208,6 +227,7 @@ class HahNode
       return implode( $sep, $this->children );
    }
 
+   
    /*
     * Method: getSibling
     * Returns a node's sibling using $offset as a linear locator
@@ -225,6 +245,7 @@ class HahNode
       else
          return $this->parent->children[ $this->sibling + $offset ];
    }
+   
    
    /*
     * Method: set 
@@ -245,6 +266,7 @@ class HahNode
          $this->attributes[$args[0]] = $args[1];
    }
 
+   
    /*
     * Method: get
     * Returns the value of a named attribute for this node
@@ -260,6 +282,20 @@ class HahNode
    {
       return isset($this->attributes[$name]) ? $this->attributes[$name] : $default;
    }
+
+   
+   /*
+    * Method: merge
+    * Merges an array passed in with its own attributes array
+    *
+    * Parameters:
+    *    $a - associative array to merge with this node's attributes
+    */
+   public function merge( $a )
+   {
+      $this->attributes = array_merge_recursive( $this->attributes, $a );
+   }
+   
    
    /*
     * Method: getIndent
@@ -272,6 +308,7 @@ class HahNode
    {
       return str_repeat(HAH_INDENT, $this->level );
    }
+   
    
    /*
     * Method: toArray
@@ -293,6 +330,7 @@ class HahNode
       else
          return $this->value;
    }
+   
    
    /*
     * Method: pick
@@ -337,7 +375,7 @@ class HahNode
       
       for ($cnt = 0; $cnt < strlen($str); $cnt++)
       {
-         if ( $str{$cnt} == $l && $str{$cnt-1} != '\\' ) 
+         if ( $str{$cnt} == $l && ($cnt == 0 || $str{$cnt-1} != '\\') ) 
             if ( $tally == -1 ) {$s = $cnt+1; $tally = 1;}
             else $tally++; 
          
@@ -382,18 +420,64 @@ class HahNode
 }
 
 
+/*
+ * Class: HahDocument
+ * The frontend class for using HAH to render files. This represents a single HAH document
+ * which is loaded then queried to return a rendered file.
+ */
 class HahDocument extends HahNode 
 {
-   
+
+   /*
+    * Constant: ENGINE_ON
+    * int - used to indicate if the parsing engine is on.
+    */
    const ENGINE_ON = 0;
+
+   /*
+    * Constant: ENGINE_OFF
+    * int - used to indicate if the parsing engine is off.
+    */   
    const ENGINE_OFF = 1;
-         
-   private $engine_mode = 0;   
+
+   /*
+    * Property: engine_mode
+    * int - state variable of the current parser <ENGINE_ON>, <ENGINE_OFF>
+    */
+   private $engine_mode = 0;
+
+   /*
+    * Property: engine_trigger
+    * string - pattern to look for before turning the engine back on
+    */
    private $engine_trigger = '';  
-   private $cursor;         
+   
+   /*
+    * Property: cursor
+    * HahNode object - reference to the current node being worked on.
+    */
+   private $cursor;
+
+   /*
+    * Property: current_level
+    * int - numerical depth of the current node we're processing
+    */
    private $current_level = 0;
+   
+   /*
+    * Property: cached
+    * string - filename of the cache file if one.
+    */
    private $cached = null;
    
+   
+   /*
+    * Constructor
+    * Creates a HahDocument checking for a cached document based on an MD5 hash of the file's contents.
+    * 
+    * Parameters:
+    * 	$file - string, path to the hah document to load and render.
+    */
    public function __construct( $file )
    {
       if ( !file_exists( $file) ) die( 'HAH Compiler Error: No such file ' . $file );
@@ -401,11 +485,19 @@ class HahDocument extends HahNode
       $this->name = $file;
       $this->value = file( $this->name );
       
-      if ( defined('HAH_CACHE') )
+      //if cache is set then look for a cached file//
+      if ( defined('HAH_CACHE') && !HAH_DEBUG )
          $this->cached = HAH_CACHE . md5(implode($this->value)) . '.php';         
    }
 
    
+   /*
+    * Method: compile
+    * Does a line-by-line file parse of the currently loaded hah document and creates the composite
+    * HahNode tree.
+    * 
+    * 
+    */
    public function compile()
    {
       //parse hah file into a valid node tree//
@@ -467,42 +559,91 @@ class HahDocument extends HahNode
    }
  
    
+   /*
+    * Method: __toString
+    * Compiles and executes the hah document returning the results.
+    * 
+    * Return:
+    * 	String of post-parsed php code.
+    */
    public function __toString()
    {
       //look for cached php//
-      if ( defined('HAH_CACHE') )
+      if ( defined('HAH_CACHE') && !HAH_DEBUG )
       {      	
-      	if ( !file_exists( $this->cached ) )
-      	{
-      		$this->compile();
-      		$fp = fopen($this->cached,'w');
-      		fwrite($fp, implode($this->children));
-      		fclose($fp);
-      	}
-      	
-			$__php = "require('". $this->cached ."');";      	      
+         if ( !file_exists( $this->cached ) )
+         {
+            $this->compile();
+            $fp = fopen($this->cached,'w');
+            fwrite($fp, implode($this->children));
+            fclose($fp);
+         }
+	
+         $__php = "require('". $this->cached ."');";      	      
       }
-		else
-		{
-	      $this->compile();
-			$__php = '?>' . implode($this->children) . '<?php ';
-		}  
+      else
+      {
+         $this->compile();
+         $__php = '?>' . implode($this->children) . '<?php ';
+      }  
 		       
-      extract( $this->attributes, EXTR_REFS );
+      extract( $this->attributes, EXTR_REFS );      
       
       ob_start();
-      eval($__php);
-      //echo highlight_string(implode($this->children));
+      $__result = eval($__php);
+      
+      if ( $__result === false && HAH_DEBUG )
+         echo $this->getSource( $__php );
+      
       return ob_get_clean();      
    }
-           
    
+   
+   /*
+    * Method: formatSource
+    * Takes a string and formats and adds line-numbers for use in viewing the source of compiled HAH code
+    * 
+    * Parameters:
+    * 	$code - the php to format
+    * 
+    * Return:
+    * 	string - html formatted code ready for echoing
+    */
+   public function formatSource( $code )
+   {
+      $lines = explode('<br />', highlight_string($code, true));
+      foreach ( $lines as $i => $line )
+         $lines[$i] = '<span>' . str_pad($i,5,'0',STR_PAD_LEFT) . '&nbsp;</span>' . $line;
+      echo '<br />' . implode('<br />', $lines);       
+   }
+   
+   
+   /*
+    * Method: findClosestLevel
+    * Returns this document since it is the top of the top.
+    * 
+    * Parameters:
+    * 	$level - int, but really doesn't do anything in this class
+    * 
+    * Return:
+    * 	HahDocument - this
+    */
    public function findClosestLevel( $level )
    {
       return $this;
    }    
    
    
+   /*
+    * Method: addImportNode
+    * Handles the haha import command (!). Is able to create nodes to handle the following file types:
+    *
+    * Import Types:
+    * 	js - creates html script tags
+    * 	css - creates css link tags
+    * 	jpg,png,jpeg,gif - creates image tags
+    * 	* - treats as another HAH document
+    */
    private function addImportNode( $data )
    {
       preg_match('/^([^\(]*)(.*)$/', trim($data), $matches );
@@ -525,17 +666,10 @@ class HahDocument extends HahNode
          $node = new HahTag('img');
          $node->set('src', $matches[1] );
       }
-        
-      elseif ( preg_match('/\.csv$/', $matches[1] ))
-      {       	
-      	//$fp = fopen($matches[1],'r');
-      	//$header = fgetcsv($fp);
-      	$node = new HahTable('colors,code',array(
-      		array('red','#0000ff'),
-      		array('green','#ff0000'),
-      		array('blue','#00ff00'),
-      	));         
-      }  
+      elseif ( preg_match('/\.(php|html)$/', $matches[1] ))
+      {
+         $node = new HahCodeBlock( null, "include('". $matches[1] ."');" );
+      }
       else 
       {          
          $node = new HahSubDocument( dirname( $this->name ) . DIRECTORY_SEPARATOR . trim($matches[1]) );
@@ -545,10 +679,13 @@ class HahDocument extends HahNode
       $this->addNode( $node );
    }
    
-   /**
-    * @method addAttribute
-    * Sets the attribute of the current node using the data passed. ( @att= value )
-    * @param string $data - the hah data line for the attribute.
+   
+   /*
+    * Method: addAttribute    
+    * Handles the HAH Attribute command (@) for parent tags
+    * 
+    * Parameters:
+    * 	$data - string, the hah line in question
     */
    private function addAttribute( $data )
    {
@@ -584,6 +721,14 @@ class HahDocument extends HahNode
    }
    
    
+   /*
+    * Method: addRawNode
+    * Handles raw node blocks in HAH files like html tags, php code and special case HTML doctypes,
+    * Also turns the parsing engine off and sets the trigger for when it needs to turn back on.
+    * 
+    * Parameters:
+    * 	$data - string, line from the hah document 
+    */
    private function addRawNode( $data )
    {
       preg_match('/^([a-z0-9_\-\?\!]+)/i', $data, $matches);
@@ -623,20 +768,38 @@ class HahDocument extends HahNode
    }
   
    
+   /*
+    * Method: turnOffEngine
+    * Handles turning off the parse engine and setting the trigger for when it comes back on.
+    * 
+    * Parameters:
+    * 	$trigger - string, pattern to look for to turn the engine back on.
+    */
    private function turnOffEngine( $trigger )
    {
-      $this->engine_mode = ENGINE_OFF;
+      $this->engine_mode = HahDocument::ENGINE_OFF;
       $this->engine_trigger = $trigger;
       $this->engine_trigger_level = $this->current_level - $this->level;
    }
    
    
+   /*
+    * Method: isEngineOff
+    * Determines the state of the engine and returns true if it's off, false otherwise. Also
+    * handles checking the trigger to see if it should turn back on and does so if needed.
+    * 
+    * Parameters:
+    * 	$line - string, the currently processing HAH line. 
+    * 
+    * Return:
+    * 	Boolean
+    */
    private function isEngineOff( $line ) 
    {
-      if ( $this->engine_mode == $this->ENGINE_ON ) return false;
+      if ( $this->engine_mode == HahDocument::ENGINE_ON ) return false;
       
       if ( preg_match( '/^(\t|\s){'. $this->engine_trigger_level .'}' . preg_quote($this->engine_trigger,'/') . '/', $line ) )
-         $this->engine_mode = $this->ENGINE_ON;
+         $this->engine_mode = HahDocument::ENGINE_ON;
         
       $this->cursor->value .= $line;
       
@@ -644,6 +807,13 @@ class HahDocument extends HahNode
    }
 
    
+   /*
+    * Method: addCodeBlockNode
+    * Adds a <HahCodeBlock> node to the tree with the data passed to it.
+    * 
+    * Parameters:
+    * 	$data - string, data for the raw code node
+    */
    private function addCodeBlockNode( $data )
    {
       $node = new HahCodeBlock();
@@ -659,7 +829,15 @@ class HahDocument extends HahNode
       }
    }
    
-   
+
+   /*
+    * Method: addNode
+    * General purpose method to add a node to the tree taking into account
+    * the indent level and updating the cursor appropriatly
+    * 
+    *  Parameters:
+    *  	$node - HahNode to add
+    */
    private function addNode( $node )
    {      
       //navigate the tree to find the correct parent//
@@ -676,6 +854,14 @@ class HahDocument extends HahNode
    }
 
 
+   /*
+    * Method: addTagNode
+    * Adds a TagNode object to the document tree at the current cursor.
+    * 
+    * Parameters:
+    *    $tag - the tag name to create
+    *    $data - the rest of the tag options as specified in the hah line
+    */
    private function addTagNode( $tag, $data )
    {
       $node = new HahTag( $tag );
@@ -710,7 +896,7 @@ class HahDocument extends HahNode
       
       //look for php assignment and modifier/filter
       if ( preg_match( '/^(\=)?(\S*)\s+(.*)$/i', $data, $matches) )
-      {         
+      {
          //treat assignment as a vartag
          if ( $matches[1] == '=' )
          {
@@ -730,14 +916,15 @@ class HahDocument extends HahNode
    }
 
 
-   /**
-    * 
+   /*
+    * Method: _parseAddAttributes
     * Parses a string off attribute=value pairs and applies them to the node given. It modifies
     * the data string by reference and has special handling for passing values by refrence for 
     * child hahdocuments.
-    * @param $data
-    * @param $node
-    * @param $passthru
+    *
+    * Parameters:
+    *    $data - reference string, attributes to parse out
+    *    $node - node to apply the attributes too
     */
    private function _parseAddAttributes( &$data, $node )
    {
@@ -757,15 +944,19 @@ class HahDocument extends HahNode
          }
       }
       
-      //chomp off attributes from data line//      
-      $data = substr( $data, strlen($atts[0]) + 2 );
+      //chomp off attributes from data line//
+	  $len = 2 + ( isset($atts[0]) ? strlen($atts[0]) : 0 );
+      $data = substr( $data, $len );
    }
    
    
-   /**
-    * addAssignmentFilter - add a filter to a HahVarTag node such as $,#,date format, etc
-    * @param $node - object reference to the HahVarTag node filters are to be assigned to
-    * @param $filters - string of the filters found in the hah file.
+   /*
+    * Method: addAssignmentFilter
+    * Add an output filter to a HahVarTag node such as ?,$,#,date format.
+    *
+    * Parameters:
+    *    $node - object reference to the HahVarTag node filters are to be assigned to
+    *    $filters - string of the filters found in the hah file.
     */
    public function addAssignmentFilter( $node, $filters )
    {
@@ -795,9 +986,12 @@ class HahDocument extends HahNode
 
 
 
-/**
- * A class node representing a single php variable/string being echoed
- * div= $varname, div= "This is my var $name"
+/*
+ * Class: HahVarTag
+ * A class node representing a single php variable/string being echoed. 
+ *
+ * Example:
+ *    div= $varname, div= "This is my var $name"
  */
 class HahVarTag extends HahNode 
 {
@@ -831,17 +1025,16 @@ class HahVarTag extends HahNode
       if ( !empty($this->attributes['no_empty_attribute']) )
       {
          $code = 'HahNode::pick(' . $code . ')';
-         $code = 'htmlentities(' . $code . ', ENT_QUOTES)';
-         $code = '(empty(' . $origin . ')?\'\':\' ' . $this->attributes['no_empty_attribute'] . '="\'.' . $code . '.\'"\')';
+         $code = '((' . $code . ' == \'\')?\'\':\' ' . $this->attributes['no_empty_attribute'] . '="\'.htmlentities(' . $code . ', ENT_QUOTES).\'"\')';
       }
       
       return '<?php echo ' . $code .'; ?>';
    }  
-   
 }
 
 
-/**
+/*
+ * Class: HahCodeBlock
  * A class node representing a php block such as if, while or foreach or just a line
  */
 class HahCodeBlock extends HahNode {
@@ -865,19 +1058,19 @@ class HahCodeBlock extends HahNode {
  	     
       return $output;
    }
-   
 }
 
 
-/**
+/*
+ * Class: HahRaw
  * Represents a node of raw code. Just returns its value.
  */
 class HahRaw extends HahNode {}
 
 
-/**
- * 
- * Represents an included hah document node
+/*
+ * Class: HahSubDocument 
+ * Represents an included hah document node. Outputs all the code required to create a new hahdocument.
  *
  */
 class HahSubDocument extends HahNode
@@ -899,7 +1092,8 @@ class HahSubDocument extends HahNode
 }
 
 
-/**
+/*
+ * Class: HahTag
  * The most common type of node, representing an HTML/XML tag.
  */
 class HahTag extends HahNode 
