@@ -14,7 +14,7 @@ TODO
 - syntax checking 
 - create a demo that illustrates hah
 - maybe add extra ! for csv, xsl, dir ( include-it-all )
-
+- maybe look into a special debugging node that spits out raw code of its children
 
 Haha - HAH Assets
 
