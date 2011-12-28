@@ -737,7 +737,10 @@ class HahDocument extends HahNode
       {
          case '?php':
             $this->turnOffEngine( '?>' );
-         break;      
+         break;
+         case '?xml':
+            $data = "?php echo '<?xml version=\"1.0\" encoding=\"UTF-8\" ?>'; ?>\n";
+         break;
          case '!html':
          case '!html5':
             $data = "!DOCTYPE HTML>\n";
@@ -938,7 +941,7 @@ class HahDocument extends HahNode
             $attval = trim( $matches[3], '\'"' );
             
             if ( $matches[1] == '@' )
-               $node->set( $matches[2], new HahVarTag($attval) );            
+               $node->set( $matches[2], new HahVarTag('"' . $attval . '"') );            
             else
                $node->set( $matches[2], $attval );
          }
