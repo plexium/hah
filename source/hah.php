@@ -354,6 +354,54 @@ class HahNode
       return '';
    }
 
+
+   /*
+    * Method: date
+    * Formats a date ( if given one ) according the the first arguments format string
+    * 
+    * Parameters:
+    * 	polymorphic, variable number of mixed variables. 1st is the date format and rest are one
+    *   or more variables to try ( uses <HahNode::pick()> )
+    * 
+    * Return:
+    * 	Formatted date. Or an empty string. 
+    */
+   static public function date()
+   {
+      $args = func_get_args();
+      $format = array_shift($args);
+      
+      $date = call_user_func_array(array('HahNode','pick'),$args);
+      
+      if ( empty($date) )
+         return '';
+      else 
+         return date($format, strtotime($date)); 
+   }
+   
+
+   /*
+    * Method: money
+    * Formats a number ( if given one ) as money.
+    * 
+    * Parameters:
+    * 	polymorphic, variable number of mixed variables. 
+    * 
+    * Return:
+    * 	Formatted number. Or an empty string. 
+    */   
+   static public function money()
+   {
+      $args = func_get_args();
+      
+      $money = call_user_func_array(array('HahNode','pick'),$args);
+      
+      if ( empty($money) )
+         return '';
+      else 
+         return '\'$\' . number_format('. $code .',2)'; 
+   }
+   
    
    /*
     * Method: _onion
@@ -1011,11 +1059,11 @@ class HahVarTag extends HahNode
             case 'no_empty_attribute': break;
                 
             case 'date':
-               $code = 'date("'. $value .'",strtotime(' . $code . '))';
+               $code = 'HahNode::date("'. $value .'",' . $code . ')';
             break;
 
             case 'money':
-               $code = '\'$\' . number_format('. $code .',2)';
+               $code = 'HahNode::money('. $code .')';
             break;
             
             default:
