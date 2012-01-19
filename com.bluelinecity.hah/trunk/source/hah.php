@@ -557,7 +557,7 @@ class HahDocument extends HahNode
          if ( $this->isEngineOff( $line ) ) continue;
 
          //first stage - establish indent/level and node type to create//
-         if ( $this->_preg_eat('/^([\s\t]*)(\:|\?|\!|\/\/|\-|@|\.|\#|<|[a-z0-9_]+)/', $line, $matches ) )
+         if ( $this->_preg_eat('/^([\s\t]*)(\:|\?|\!|\/\/|\-|@|\.|\#|<|[a-z0-9_][a-z0-9_\-]*)/', $line, $matches ) )
          {            
             if ( $matches[2] == '//' ) continue;
 
