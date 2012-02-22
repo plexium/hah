@@ -55,6 +55,7 @@ html
     form( method="post" )
       fieldset
         legend Test Fields
+          !select( id="test" label="Test Select:" options="1,2,3,4" )
 //        !form_elements.hah( label="User Name" id="user_name")
 //        !form_elements.hah( label="Password" id="password" @value="$passval" )
 //		!haha/forms/date( id="dob" @value="$dob" label="Date of Birth"  required="true"  )
