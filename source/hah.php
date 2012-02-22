@@ -41,6 +41,9 @@ if ( !defined('HAH_NONE_SINGLE_TAGS') )
 if ( !defined('HAH_VERSION') )
    define('HAH_VERSION',"1.1");
 
+if ( !defined('HAH_ASSETS') )
+   define('HAH_ASSETS', dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR . 'haha' . DIRECTORY_SEPARATOR);
+   
 if ( !defined('HAH_CACHE') ){}
    //then don't do anything
    
@@ -713,13 +716,15 @@ class HahDocument extends HahNode
    private function addImportNode( $data )
    {
       preg_match('/^([^\(]*)(.*)$/', trim($data), $matches );
-         
+      
+      //javascript file//
       if ( preg_match('/\.js$/', $matches[1] ))
       {
          $node = new HahTag('script');
          $node->set('src', $matches[1] );
          $node->set('type','text/javascript');         
       }  
+      //css file//
       elseif ( preg_match('/\.css$/', $matches[1] ))
       {
          $node = new HahTag('link');
@@ -727,18 +732,25 @@ class HahDocument extends HahNode
          $node->set('type','text/css');
          $node->set('rel','stylesheet');         
       }  
+      //image file//
       elseif ( preg_match('/\.(jpg|png|jpeg|gif)$/', $matches[1] ))
       {
          $node = new HahTag('img');
          $node->set('src', $matches[1] );
       }
+      //raw php include//
       elseif ( preg_match('/\.(php|html)$/', $matches[1] ))
       {
          $node = new HahCodeBlock( null, "include('". $matches[1] ."');" );
       }
+      //hah sub document or hah asset//
       else 
-      {          
-         $node = new HahSubDocument( dirname( $this->name ) . DIRECTORY_SEPARATOR . trim($matches[1]) );
+      {
+         $fp = dirname( $this->name ) . DIRECTORY_SEPARATOR . trim($matches[1]);
+         if ( file_exists($fp) )
+            $node = new HahSubDocument( $fp );
+         else 
+            $node = new HahSubDocument( HAH_ASSETS . trim($matches[1]) );
       }
 
       $this->_parseAddAttributes( $matches[2], $node );      
@@ -1162,7 +1174,7 @@ class HahSubDocument extends HahNode
       $output .= 'echo $__subhahdoc; ';
       $output .= 'unset($__subhahdoc); ';
       $output .= ' ?>';
-      echo $output;
+
       return $output;
    }
 }

@@ -1,0 +1,36 @@
+// HAH standard selectform element
+// Usage: !haha/forms/select( label="Mylabel" height="23" multiselect="true" id="myid" value="my value" class="class" options="$options")
+p
+	@class=? $class
+	- if ( $label )
+		label( @for="$id" )= $label
+		
+	select( @id="$id" @name="$id" )
+		@multiple=? $multiselect
+		@size=? $height
+		@onblur=? $onblur
+		@onchange=? $onchange
+		@onclick=? $onclick
+		@ondbclick=? $ondbclick
+		@onfocus=? $onfocus
+		@onmousedown=? $onmousedown
+		@onmousemove=? $onmousemove
+		@onmouseout=? $onmouseout
+		@onmouseover=? $onmouseover
+		@onmouseup=? $onmouseup
+		@onkeydown=? $onkeydown
+		@onkeypress=? $onkeypress
+		@onkeyup=? $onkeyup
+		
+		- if ( !is_array($options) )
+			- foreach ( explode(',',$options) as $option )
+				- $selected = ( $option == $value ) ? 'selected' : ''
+				option= $option
+					@selected=? $selected
+		
+		- if ( is_array($options) )
+			- foreach ( $options as $key => $option )
+				- $selected = ( $option == $value ) ? 'selected' : ''
+				option( @value="$option" )= $key
+					@selected=? $selected
+				 
