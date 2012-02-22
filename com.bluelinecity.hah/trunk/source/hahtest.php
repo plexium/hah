@@ -10,5 +10,6 @@ $test->set('color', 'fff');
 $test->set('harry', 'reed');
 $test->set('passval', 'pass');
 $test->set('padding', '10');
-
+$test->set('parmvar', 'a;slkdkjf');
+$test->set('outvar', 5);
 echo $test;

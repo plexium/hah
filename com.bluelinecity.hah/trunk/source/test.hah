@@ -49,6 +49,9 @@ html
     
     .error=?wordwrap,nl2br $error
     
+    !included.hah( parmvar="4" )
+   
+    
     form( method="post" )
       fieldset
         legend Test Fields
