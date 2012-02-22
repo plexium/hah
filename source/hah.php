@@ -398,8 +398,11 @@ class HahNode
       
       if ( empty($money) )
          return '';
-      else 
-         return '\'$\' . number_format('. $code .',2)'; 
+      else
+      {
+         $parts = explode('.',number_format($money,2));
+         return '<span class="dollars">$'. $parts[0] .'</span><span class="cents">.'. $parts[1] .'</span>';   
+      }
    }
    
    
@@ -1022,7 +1025,7 @@ class HahDocument extends HahNode
       
       if ( preg_match('/\"([^"]+)\"/', $filters, $matches ) )
          $node->set('date', str_replace("_", " ", $matches[1]));
-
+               
       elseif ( strpos( $filters, '$' ) !== false )
          $node->set('money','');
 
@@ -1058,7 +1061,7 @@ class HahVarTag extends HahNode
          {        
             case 'no_empty_attribute': break;
                 
-            case 'date':
+            case 'date':  
                $code = 'HahNode::date("'. $value .'",' . $code . ')';
             break;
 
