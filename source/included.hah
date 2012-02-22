@@ -1,0 +1,9 @@
+- $invar = 3
+h3 my included document
+	dl
+		dt invar should be 3
+		dd= $invar
+		dt parmvar should be 4
+		dd= $parmvar
+		dt outvar should be 5
+		dd= $outvar

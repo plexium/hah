@@ -140,6 +140,21 @@ class HahNode
       $this->parent = $parent;
    }
 
+   /*
+    * Method: getTop
+    * This crawls up the node tree and returns the top node
+    * 
+    * Return:
+    * 	$parent - the top parent, HAHDocument Node.
+    */
+   public function getTop()
+   {
+      if ( $this->parent )
+         return $this->parent->getTop();
+      else
+         return $this;
+   }
+   
    
    /*
     * Method: addChild
@@ -1132,6 +1147,13 @@ class HahSubDocument extends HahNode
    public function __toString()
    {                 
       $output = '<?php $__subhahdoc = new HahDocument(\''. $this->name .'\'); ';
+      
+      $doc = $this->getTop();
+
+      foreach ( $doc->attributes as $name => $value )
+         if ( !isset($this->attributes[$name]))
+            $this->attributes[$name] = $value;
+      
       foreach ( $this->attributes as $name => $value )
       {
          $val = ( is_a($value,'HahVarTag') ? $value->name : '"' . $value . '"' );
@@ -1140,7 +1162,7 @@ class HahSubDocument extends HahNode
       $output .= 'echo $__subhahdoc; ';
       $output .= 'unset($__subhahdoc); ';
       $output .= ' ?>';
-      
+      echo $output;
       return $output;
    }
 }
