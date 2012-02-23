@@ -48,7 +48,7 @@ html
       p 1 equals 1... that's great!
     
     .error=?wordwrap,nl2br $error
-    
+    - $outvar = 8
     !included.hah( parmvar="4" )
    
     
