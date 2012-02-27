@@ -7,7 +7,7 @@
  * similar to HAML.
  * 
  * License:
- * Copyright (c) 2011, Bryan English - bryan@bluelinecity.com
+ * Copyright (c) 2012, Bryan English - bryan@bluelinecity.com
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ if ( !defined('HAH_NONE_SINGLE_TAGS') )
    define('HAH_NONE_SINGLE_TAGS',"/script|iframe|textarea/i");
 
 if ( !defined('HAH_VERSION') )
-   define('HAH_VERSION',"1.1");
+   define('HAH_VERSION',"1.2");
 
 if ( !defined('HAH_ASSETS') )
    define('HAH_ASSETS', dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR . 'haha' . DIRECTORY_SEPARATOR);
@@ -1218,42 +1218,5 @@ class HahTag extends HahNode
          $output .= HAH_NL . $this->getChildren(HAH_NL) . HAH_NL .  $indent;
          
       return $output . '</'. $this->name .'>';         
-   }         
-}
-
-
-/*
- * Class: HahTable
- */
-class HahTable extends HahNode 
-{   
-   public function __toString()
-   {
-   	//create a table
-   	$table = new HahTag('table');
-   	
-   	$thead = new HahTag('thead');
-   	$tr = new HahTag('tr');
-   	foreach ( explode(',',$this->name) as $header )
-   		$tr->addChild( new HahTag('th', $header) );
-   	$thead->addChild($tr);
-   	
-   	$table->addChild($thead);
-   	
-   	foreach ( $this->value as $row )
-   	{
-   		$tr = new HahTag('tr');
-   		$tr->set('class',ff('even','odd'));
-   		foreach ( $row as $index => $cell )
-   		{
-   			$td = new HahTag('td',htmlspecialchars($cell));
-   			$tr->addChild($td);
-   		}
-   		$table->addChild($tr);
-   	}
-   	
-   	$this->addChild($table);
-   	
-   	return (string) $table;
    }         
 }
