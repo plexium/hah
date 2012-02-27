@@ -1,0 +1,19 @@
+- echo '<?xml version="1.0" encoding="utf-8"?>'
+feed( xmlns="http://www.w3.org/2005/Atom" )
+   
+   title=? $title
+   link
+      @href= $link
+   updated=?"c" $updated
+   author
+      name=? $author
+   id=? $id
+   
+   entry
+      - foreach( $entries as $entry )
+         title=? $entry['title']
+         link
+            @href=? $entry['link']
+         id=? $entry['id']
+         updated=?"c" $entry['updated']
+         summary=? $entry['summary']
