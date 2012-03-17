@@ -39,7 +39,7 @@ if ( !defined('HAH_NONE_SINGLE_TAGS') )
    define('HAH_NONE_SINGLE_TAGS',"/script|iframe|textarea/i");
 
 if ( !defined('HAH_VERSION') )
-   define('HAH_VERSION',"1.1");
+   define('HAH_VERSION',"1.2");
 
 if ( !defined('HAH_ASSETS') )
    define('HAH_ASSETS', dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR . 'haha' . DIRECTORY_SEPARATOR);
@@ -578,7 +578,7 @@ class HahDocument extends HahNode
          if ( $this->isEngineOff( $line ) ) continue;
 
          //first stage - establish indent/level and node type to create//
-         if ( $this->_preg_eat('/^([\s\t]*)(\:|\?|\!|\/\/|\-|@|\.|\#|<|[a-z0-9_][a-z0-9_\-]*)/', $line, $matches ) )
+         if ( $this->_preg_eat('/^([\s\t]*)(\:|\?|\!|\/\/|\-|@|\.|\#|<|[a-z0-9_][a-z0-9_\-]*)/i', $line, $matches ) )
          {            
             if ( $matches[2] == '//' ) continue;
 
@@ -718,14 +718,14 @@ class HahDocument extends HahNode
       preg_match('/^([^\(]*)(.*)$/', trim($data), $matches );
       
       //javascript file//
-      if ( preg_match('/\.js$/', $matches[1] ))
+      if ( preg_match('/\.js$/i', $matches[1] ))
       {
          $node = new HahTag('script');
          $node->set('src', $matches[1] );
          $node->set('type','text/javascript');         
       }  
       //css file//
-      elseif ( preg_match('/\.css$/', $matches[1] ))
+      elseif ( preg_match('/\.css$/i', $matches[1] ))
       {
          $node = new HahTag('link');
          $node->set('href', $matches[1] );
@@ -733,13 +733,13 @@ class HahDocument extends HahNode
          $node->set('rel','stylesheet');         
       }  
       //image file//
-      elseif ( preg_match('/\.(jpg|png|jpeg|gif)$/', $matches[1] ))
+      elseif ( preg_match('/\.(jpg|png|jpeg|gif)$/i', $matches[1] ))
       {
          $node = new HahTag('img');
          $node->set('src', $matches[1] );
       }
       //raw php include//
-      elseif ( preg_match('/\.(php|html)$/', $matches[1] ))
+      elseif ( preg_match('/\.(php|html)$/i', $matches[1] ))
       {
          $node = new HahCodeBlock( null, "include('". $matches[1] ."');" );
       }
@@ -902,7 +902,7 @@ class HahDocument extends HahNode
       $this->addNode( $node );
       
       //special case for if/else blocks//
-      if ( preg_match('/^\s*else/',$data) )
+      if ( preg_match('/^\s*else/i',$data) )
       {                                    
          $sibling = $this->cursor->getSibling(-1);
          $sibling->set('leave_block_open', true);
