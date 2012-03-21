@@ -36,10 +36,10 @@ if ( !defined('HAH_INDENT') )
    define( 'HAH_INDENT', "  " );
 
 if ( !defined('HAH_NONE_SINGLE_TAGS') )
-   define('HAH_NONE_SINGLE_TAGS',"/script|iframe|textarea/i");
+   define('HAH_NONE_SINGLE_TAGS',"/script|iframe|textarea|div/i");
 
 if ( !defined('HAH_VERSION') )
-   define('HAH_VERSION',"1.2");
+   define('HAH_VERSION',"1.3");
 
 if ( !defined('HAH_ASSETS') )
    define('HAH_ASSETS', dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR . 'haha' . DIRECTORY_SEPARATOR);
@@ -422,7 +422,63 @@ class HahNode
          return '<span class="dollars">$'. $parts[0] .'</span><span class="cents">.'. $parts[1] .'</span>';   
       }
    }
+
    
+   /*
+    * Method: htmllist
+    * Takes an array and formats it as an html list (ul,ol,dl)
+    * 
+    * Parameters:
+    * 	$data - array of values to make into a list
+    *   $type - type of list to create
+    * 
+    * Return:
+    * 	html list
+    */   
+   static public function htmllist( $data, $type = 'ul')
+   {      
+      if ( empty($data) || !is_array($data) )
+         return '';
+      else
+      {
+         switch ( $type )
+         {
+            case 'ul':
+            case 'unordered':
+               return '<ul><li>' . implode('</li><li>',$data) . '</li></ul>';
+            break;
+            case 'ol':
+            case 'ordered':
+               return '<ol><li>' . implode('</li><li>',$data) . '</li></ol>';
+            break;
+            case 'dl':
+            case 'definition':
+               $content = '<dl>';
+               foreach ( $data as $dt => $dd )
+                  $content .= '<dt>' . $dt . '</dt><dd>' . $dd . '</dd>';
+               return $content . '</dl>';
+            break;
+         }
+      }
+   }
+   
+   
+   /*
+    * Method: table
+    */   
+   static public function table( $data, $settings = null )
+   {      
+      if ( empty($data) || !is_array($data) ) return '';           
+      
+      $settings = unserialize($settings);
+      
+      $table = new HahTable( $data );
+      $table->attributes = $settings;
+      
+      
+      return (string) $table;
+   }
+
    
    /*
     * Method: _onion
@@ -549,6 +605,7 @@ class HahDocument extends HahNode
     */
    public function __construct( $file )
    {
+      
       if ( !file_exists( $file) ) die( 'HAH Compiler Error: No such file ' . $file );
       
       $this->name = $file;
@@ -578,7 +635,7 @@ class HahDocument extends HahNode
          if ( $this->isEngineOff( $line ) ) continue;
 
          //first stage - establish indent/level and node type to create//
-         if ( $this->_preg_eat('/^([\s\t]*)(\:|\?|\!|\/\/|\-|@|\.|\#|<|[a-z0-9_][a-z0-9_\-]*)/i', $line, $matches ) )
+         if ( $this->_preg_eat('/^([\s\t]*)(\:|\?|\!|\/\/|\-|@|\.|\#|<|\$|[a-z0-9_][a-z0-9_\-]*)/i', $line, $matches ) )
          {            
             if ( $matches[2] == '//' ) continue;
 
@@ -612,7 +669,11 @@ class HahDocument extends HahNode
                case '@': //set an attribute for the current node//
                   $this->addAttribute( $line );
                break;
-                              
+
+               case '$': //create a variable node//
+                  $this->addVarNode( $line );
+               break;
+               
                case '.': //create tag nodes
                case '#':
                   $this->addTagNode( 'div', $matches[2] . $line );
@@ -743,13 +804,19 @@ class HahDocument extends HahNode
       {
          $node = new HahCodeBlock( null, "include('". $matches[1] ."');" );
       }
+      //a variable include//
+      elseif ( preg_match('/^\$/i', $matches[1] ) )
+      {
+         $node = new HahSubDocument( $matches[1] );         
+      }
       //hah sub document or hah asset//
       else 
       {
          $fp = dirname( $this->name ) . DIRECTORY_SEPARATOR . trim($matches[1]);
+         
          if ( file_exists($fp) )
             $node = new HahSubDocument( $fp );
-         else 
+         else
             $node = new HahSubDocument( HAH_ASSETS . trim($matches[1]) );
       }
 
@@ -848,6 +915,25 @@ class HahDocument extends HahNode
       $this->addNode( $node );
    }
   
+   
+   /*
+    * Method: addVarNode
+    * Adds a php variable node for straight out echoing indicated by the ($) command.
+    * 
+    * Parameters:
+    * 	$data - string, line from the hah document
+    */
+   private function addVarNode( $data )
+   {
+      preg_match('/^([^\(]*)(.*)$/', trim($data), $matches );
+      
+      $node = new HahVarTag( trim('$' . $matches[1]) );
+      
+      $this->_parseAddAttributes( $matches[2], $node );            
+      
+      $this->addNode( $node );
+   }
+
    
    /*
     * Method: turnOffEngine
@@ -1069,7 +1155,8 @@ class HahDocument extends HahNode
 
 /*
  * Class: HahVarTag
- * A class node representing a single php variable/string being echoed. 
+ * A class node representing a single php variable/string being echoed. Attributes can 
+ * control how the variable is output in the tree.
  *
  * Example:
  *    div= $varname, div= "This is my var $name"
@@ -1085,9 +1172,14 @@ class HahVarTag extends HahNode
       foreach( $this->attributes as $key => $value )
       {
          switch ($key)
-         {        
-            case 'no_empty_attribute': break;
-                
+         {
+            case 'no_empty_attribute':
+            case 'headers':
+            case 'id':
+            case 'edit_link':
+            case 'delete_link':
+            break;
+            
             case 'date':  
                $code = 'HahNode::date("'. $value .'",' . $code . ')';
             break;
@@ -1096,8 +1188,16 @@ class HahVarTag extends HahNode
                $code = 'HahNode::money('. $code .')';
             break;
             
+            case 'list':
+               $code = 'HahNode::htmllist('. $code .',"'. $value .'")';
+            break;
+
+            case 'table':
+               $code = 'HahNode::table('. $code .',\''. serialize($this->attributes) .'\')';
+            break;
+            
             default:
-               $code = $key . '(' . $code . $value . ')';
+               $code = $key . '(' . $code . ')';
             break;
          }
       }
@@ -1157,8 +1257,9 @@ class HahRaw extends HahNode {}
 class HahSubDocument extends HahNode
 {
    public function __toString()
-   {                 
-      $output = '<?php $__subhahdoc = new HahDocument(\''. $this->name .'\'); ';
+   {  
+      
+      $output = '<?php $__subhahdoc = new HahDocument("'. $this->name .'"); ';
       
       $doc = $this->getTop();
 
@@ -1224,36 +1325,78 @@ class HahTag extends HahNode
 
 /*
  * Class: HahTable
+ * 
+ * Attributes
+ * - headers="id,blah,blah"
+ * - limit="30"
+ * - sort
+ * - id
+ * - edit_path
+ * - add_path
+ * - delete_path
  */
 class HahTable extends HahNode 
 {   
    public function __toString()
    {
-   	//create a table
-   	$table = new HahTag('table');
-   	
-   	$thead = new HahTag('thead');
-   	$tr = new HahTag('tr');
-   	foreach ( explode(',',$this->name) as $header )
-   		$tr->addChild( new HahTag('th', $header) );
-   	$thead->addChild($tr);
-   	
-   	$table->addChild($thead);
-   	
-   	foreach ( $this->value as $row )
-   	{
-   		$tr = new HahTag('tr');
-   		$tr->set('class',ff('even','odd'));
-   		foreach ( $row as $index => $cell )
-   		{
-   			$td = new HahTag('td',htmlspecialchars($cell));
-   			$tr->addChild($td);
-   		}
-   		$table->addChild($tr);
-   	}
-   	
-   	$this->addChild($table);
-   	
-   	return (string) $table;
+      $edit_link = $this->get('edit_link');
+      $delete_link = $this->get('delete_link');
+      $id = $this->get('id','id');
+      
+      //create a table//
+      $table = new HahTag('table');
+      
+      //create the header//
+      $thead = new HahTag('thead');
+      $tr = new HahTag('tr');
+      
+      if ( $this->get('headers') )
+         $headers = explode(',',$this->get('headers'));
+      else
+         $headers = array_keys($this->name[0]); 
+
+      //create the body//
+      foreach ( $headers as $header )
+         $tr->addChild( new HahTag('th', $header) );
+         
+      $thead->addChild($tr);      
+      $table->addChild($thead);
+      
+      foreach ( $this->name as $row )
+      {
+         $tr = new HahTag('tr');
+         $tr->set('class','even');
+         foreach ( $row as $index => $cell )
+         {
+         	$td = new HahTag('td');
+         	if ( empty($edit_link) )
+         	{
+         	   $td->value = htmlspecialchars($cell);
+         	}
+         	else
+         	{
+         	   $a = new HahTag('a',htmlspecialchars($cell));
+         	   $a->set('href', $edit_link . $row[$id]);
+         	   $td->addChild($a);
+         	}  
+         	       
+         	$tr->addChild($td);
+         }
+         
+         if ( $delete_link )
+         {
+            $a = new HahTag('a', 'Delete');
+            $a->set('href', $delete_link . $row[$id]);
+            $td = new HahTag('td');
+            $td->addChild($a);
+            $tr->addChild($td);
+         }
+         
+         $table->addChild($tr);
+      }
+      
+      $this->addChild($table);
+      
+      return (string) $table;
    }         
 }
