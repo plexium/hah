@@ -50,8 +50,21 @@ html
     .error=?wordwrap,nl2br $error
     - $outvar = 8
     !included.hah( parmvar="4" )
-   
-    
+ 
+    - $includedtest = 'test.html';
+    !$includedtest
+ 	
+    $includedtest
+
+    $colorlist( list="ordered" ) 
+    $colorlist( list="ul" )
+    $hash( list="definition" ) 
+
+    $contacts( table="true" headers="id,Name,Phone,Age,Date of Birth" id="id" )
+        @edit_link contacts/edit/
+        @delete_link contacts/delete/
+
+    p red blue
     form( method="post" )
       fieldset
         legend Test Fields
