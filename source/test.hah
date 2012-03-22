@@ -60,9 +60,14 @@ html
     $colorlist( list="ul" )
     $hash( list="definition" ) 
 
+    <style type="text/css">
+       table .column1 { display: none; }
+    </style>
+	
     $contacts( table="true" headers="id,Name,Phone,Age,Date of Birth" id="id" )
         @edit_link contacts/edit/
         @delete_link contacts/delete/
+        	
 
     p red blue
     form( method="post" )
