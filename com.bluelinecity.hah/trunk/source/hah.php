@@ -473,8 +473,7 @@ class HahNode
       $settings = unserialize($settings);
       
       $table = new HahTable( $data );
-      $table->attributes = $settings;
-      
+      $table->attributes = $settings;      
       
       return (string) $table;
    }
@@ -1356,19 +1355,25 @@ class HahTable extends HahNode
          $headers = array_keys($this->name[0]); 
 
       //create the body//
-      foreach ( $headers as $header )
-         $tr->addChild( new HahTag('th', $header) );
-         
+      foreach ( $headers as $i => $header )
+      {
+         $th = new HahTag('th', $header);
+         $th->set('class','column' . $i ); 
+         $tr->addChild( $th );
+      }
+        
       $thead->addChild($tr);      
       $table->addChild($thead);
       
-      foreach ( $this->name as $row )
+      foreach ( $this->name as $i => $row )
       {
          $tr = new HahTag('tr');
          $tr->set('class','even');
+         $j = 1;
          foreach ( $row as $index => $cell )
          {
          	$td = new HahTag('td');
+         	$td->set('class','column' . $j++);
          	if ( empty($edit_link) )
          	{
          	   $td->value = htmlspecialchars($cell);
