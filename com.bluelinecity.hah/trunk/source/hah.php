@@ -722,7 +722,7 @@ class HahDocument extends HahNode
       $__result = eval($__php);
       
       if ( $__result === false && HAH_DEBUG )
-         echo $this->getSource( $__php );
+         echo $this->formatSource( $__php );
       
       return ob_get_clean();      
    }
@@ -1266,7 +1266,7 @@ class HahSubDocument extends HahNode
 
       foreach ( $doc->attributes as $name => $value )
          if ( !isset($this->attributes[$name]))
-            $this->attributes[$name] = $value;
+            $this->attributes[$name] = new HahVarTag($name);
       
       foreach ( $this->attributes as $name => $value )
       {
