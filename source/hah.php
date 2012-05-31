@@ -7,7 +7,7 @@
  * similar to HAML.
  * 
  * License:
- * Copyright (c) 2011, Bryan English - bryan@bluelinecity.com
+ * Copyright (c) 2012, Bryan English - bryan@bluelinecity.com
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -429,8 +429,8 @@ class HahNode
     * Takes an array and formats it as an html list (ul,ol,dl)
     * 
     * Parameters:
-    * 	$data - array of values to make into a list
-    *   $type - type of list to create
+    *    $data - array of values to make into a list
+    *    $type - type of list to create
     * 
     * Return:
     * 	html list
@@ -465,17 +465,27 @@ class HahNode
    
    /*
     * Method: table
+    * Creates a simple html table from a 2-dimentional array.
+    * 
+    * Parameters:
+    *    $data - array, of data to populate the table with.
+    *    $id - string, id of the table
+    *
+    * Return:
+    *    string, html code of the table.
     */   
-   static public function table( $data, $settings = null )
+   static public function table( $data, $id )
    {      
       if ( empty($data) || !is_array($data) ) return '';           
+   
+      $table = '<table id="'. htmlspecialchars($id) .'"><thead><tr><th>';
+      $table .= implode('</th><th>', array_shift($data) );
+      $table .= '</th></thead><tbody>';
+      foreach ( $data as $key => $row )
+         $table .= '<tr><td>' . implode('</td><td>',$row) . '</td></tr>';
+      $table .= '</tbody></table>';
       
-      $settings = unserialize($settings);
-      
-      $table = new HahTable( $data );
-      $table->attributes = $settings;      
-      
-      return (string) $table;
+      return $table;
    }
 
    
@@ -604,7 +614,6 @@ class HahDocument extends HahNode
     */
    public function __construct( $file )
    {
-      
       if ( !file_exists( $file) ) die( 'HAH Compiler Error: No such file ' . $file );
       
       $this->name = $file;
@@ -634,7 +643,7 @@ class HahDocument extends HahNode
          if ( $this->isEngineOff( $line ) ) continue;
 
          //first stage - establish indent/level and node type to create//
-         if ( $this->_preg_eat('/^([\s\t]*)(\:|\?|\!|\/\/|\-|@|\.|\#|<|\$|[a-z0-9_][a-z0-9_\-]*)/i', $line, $matches ) )
+         if ( $this->_preg_eat('/^([\s\t]*)(\:|\?|\!|\/\/|\-|@|\.|\#|\$|<|[a-z0-9_][a-z0-9_\-]*)/', $line, $matches ) )
          {            
             if ( $matches[2] == '//' ) continue;
 
@@ -720,7 +729,7 @@ class HahDocument extends HahNode
       
       ob_start();
       $__result = eval($__php);
-      
+		 
       if ( $__result === false && HAH_DEBUG )
          echo $this->formatSource( $__php );
       
@@ -812,10 +821,9 @@ class HahDocument extends HahNode
       else 
       {
          $fp = dirname( $this->name ) . DIRECTORY_SEPARATOR . trim($matches[1]);
-         
          if ( file_exists($fp) )
             $node = new HahSubDocument( $fp );
-         else
+         else 
             $node = new HahSubDocument( HAH_ASSETS . trim($matches[1]) );
       }
 
@@ -1173,12 +1181,8 @@ class HahVarTag extends HahNode
       foreach( $this->attributes as $key => $value )
       {
          switch ($key)
-         {
+         {            
             case 'no_empty_attribute':
-            case 'headers':
-            case 'id':
-            case 'edit_link':
-            case 'delete_link':
             break;
             
             case 'date':  
@@ -1194,7 +1198,7 @@ class HahVarTag extends HahNode
             break;
 
             case 'table':
-               $code = 'HahNode::table('. $code .',\''. serialize($this->attributes) .'\')';
+               $code = 'HahNode::table('. $code .',"'. $value .'")';
             break;
             
             default:
@@ -1264,9 +1268,10 @@ class HahSubDocument extends HahNode
       
       $doc = $this->getTop();
 
+		//pass all top level vars down to this subdoc//
       foreach ( $doc->attributes as $name => $value )
-         if ( !isset($this->attributes[$name]))
-            $this->attributes[$name] = new HahVarTag($name);
+         if ( !isset($this->attributes[$name]) && !is_numeric($name) )
+            $this->attributes[$name] = new HahVarTag('$' . $name);
       
       foreach ( $this->attributes as $name => $value )
       {
@@ -1320,90 +1325,5 @@ class HahTag extends HahNode
          $output .= HAH_NL . $this->getChildren(HAH_NL) . HAH_NL .  $indent;
          
       return $output . '</'. $this->name .'>';         
-   }         
-}
-
-
-/*
- * Class: HahTable
- * 
- * Attributes
- * - headers="id,blah,blah"
- * - limit="30"
- * - sort
- * - id
- * - edit_path
- * - add_path
- * - delete_path
- */
-class HahTable extends HahNode 
-{   
-   public function __toString()
-   {
-      $edit_link = $this->get('edit_link');
-      $delete_link = $this->get('delete_link');
-      $id = $this->get('id','id');
-      
-      //create a table//
-      $table = new HahTag('table');
-      
-      //create the header//
-      $thead = new HahTag('thead');
-      $tr = new HahTag('tr');
-      
-      if ( $this->get('headers') )
-         $headers = explode(',',$this->get('headers'));
-      else
-         $headers = array_keys($this->name[0]); 
-
-      //create the body//
-      foreach ( $headers as $i => $header )
-      {
-         $th = new HahTag('th', $header);
-         $th->set('class','column' . $i ); 
-         $tr->addChild( $th );
-      }
-        
-      $thead->addChild($tr);      
-      $table->addChild($thead);
-      
-      foreach ( $this->name as $i => $row )
-      {
-         $tr = new HahTag('tr');
-         $tr->set('class','even');
-         $j = 1;
-         foreach ( $row as $index => $cell )
-         {
-         	$td = new HahTag('td');
-         	$td->set('class','column' . $j++);
-         	if ( empty($edit_link) )
-         	{
-         	   $td->value = htmlspecialchars($cell);
-         	}
-         	else
-         	{
-         	   $a = new HahTag('a',htmlspecialchars($cell));
-         	   $a->set('href', $edit_link . $row[$id]);
-         	   $td->addChild($a);
-         	}  
-         	       
-         	$tr->addChild($td);
-         }
-         
-         if ( $delete_link )
-         {
-            $a = new HahTag('a', 'Delete');
-            $a->set('href', $delete_link . $row[$id]);
-            $td = new HahTag('td');
-            $td->addChild($a);
-            $tr->addChild($td);
-         }
-         
-         $table->addChild($tr);
-      }
-      
-      $this->addChild($table);
-      
-      return (string) $table;
    }         
 }
