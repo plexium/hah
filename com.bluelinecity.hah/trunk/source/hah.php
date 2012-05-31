@@ -1002,7 +1002,17 @@ class HahDocument extends HahNode
          $this->cursor->value = '} ' . $this->cursor->value; 
       }
       
-      //TODO: special case for do while
+      //special case for do while blocks//
+      if ( preg_match('/^\s*while/i',$data) )
+      {                                    
+         $sibling = $this->cursor->getSibling(-1);
+         if ( $sibling->value == 'do' )
+         {
+            $sibling->set('leave_block_open', true);
+            $this->cursor->value = '} ' . $this->cursor->value; 
+         }
+      }
+
    }
    
 
