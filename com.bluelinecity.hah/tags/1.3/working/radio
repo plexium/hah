@@ -1,0 +1,26 @@
+// HAH standard radio form element
+// Usage: !haha/forms/radio( label="Mylabel" id="myid" value="my value" class="class" options="$options")
+p
+	@class=? $class
+	- if ( $label )
+		label( @for="$id" )= $label
+	
+	- if ( !is_array($options) )
+		- foreach ( explode(',',$options) as $option )
+			- $checked = ( $option == $value ) ? 'checked' : ''
+			label= $option
+				input( type="radio" @id="$id" @name="$id" @value="$option" )
+					@checked=? $checked
+					@onblur=? $onblur
+					@onchange=? $onchange
+					@onclick=? $onclick
+					@ondbclick=? $ondbclick
+					@onfocus=? $onfocus
+					@onmousedown=? $onmousedown
+					@onmousemove=? $onmousemove
+					@onmouseout=? $onmouseout
+					@onmouseover=? $onmouseover
+					@onmouseup=? $onmouseup
+					@onkeydown=? $onkeydown
+					@onkeypress=? $onkeypress
+					@onkeyup=? $onkeyup
