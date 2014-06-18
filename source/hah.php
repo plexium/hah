@@ -38,6 +38,9 @@ if ( !defined('HAH_INDENT') )
 if ( !defined('HAH_NONE_SINGLE_TAGS') )
    define('HAH_NONE_SINGLE_TAGS',"/script|iframe|textarea|div/i");
 
+if ( !defined('HAH_VOID_ELEMENTS') )
+   define('HAH_VOID_ELEMENTS',"/area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr/i");
+   
 if ( !defined('HAH_VERSION') )
    define('HAH_VERSION',"1.3");
 
@@ -841,7 +844,7 @@ class HahDocument extends HahNode
     */
    private function addAttribute( $data )
    {
-      if ( !preg_match('/^([^\s\=]+)(\=)?(\S*)\s+(.+)/', $data, $matches) ) 
+      if ( !preg_match('/^([^\s\=]+)(\=)?(\S*)\s*(\S*)/', $data, $matches) ) 
          return;
 
       //set as a plain text attribute//
@@ -850,7 +853,7 @@ class HahDocument extends HahNode
          $this->cursor->set( $matches[1], trim($matches[4]) );
          return;
       }
-      
+            
       //else attribute is a php value//
       $prop = new HahVarTag( trim($matches[4]) );
       
@@ -947,7 +950,7 @@ class HahDocument extends HahNode
     * Handles turning off the parse engine and setting the trigger for when it comes back on.
     * 
     * Parameters:
-    * 	$trigger - string, pattern to look for to turn the engine back on.
+    * 	$trigger - string, pattern to look for to turn the engine back on. 
     */
    private function turnOffEngine( $trigger )
    {
@@ -961,6 +964,7 @@ class HahDocument extends HahNode
     * Method: isEngineOff
     * Determines the state of the engine and returns true if it's off, false otherwise. Also
     * handles checking the trigger to see if it should turn back on and does so if needed.
+    * Takes care of 
     * 
     * Parameters:
     * 	$line - string, the currently processing HAH line. 
@@ -971,12 +975,22 @@ class HahDocument extends HahNode
    private function isEngineOff( $line ) 
    {
       if ( $this->engine_mode == HahDocument::ENGINE_ON ) return false;
-      
-      if ( preg_match( '/^(\t|\s){'. $this->engine_trigger_level .'}' . preg_quote($this->engine_trigger,'/') . '/', $line ) )
-         $this->engine_mode = HahDocument::ENGINE_ON;
-        
+
+      if ( $this->engine_trigger == '' )
+      {
+         if ( !preg_match( '/^(\t|\s){'. ($this->engine_trigger_level+1) .'}/', $line ) )
+         {
+            $this->engine_mode = HahDocument::ENGINE_ON;
+            return false;
+         }
+      }
+      elseif( preg_match( '/^(\t|\s){'. $this->engine_trigger_level .'}' . preg_quote($this->engine_trigger,'/') . '/', $line ) )
+      {
+            $this->engine_mode = HahDocument::ENGINE_ON;         
+      }
+            
       $this->cursor->value .= $line;
-      
+               
       return true;
    }
 
@@ -1081,17 +1095,26 @@ class HahDocument extends HahNode
       }
       
       //look for php assignment and modifier/filter
-      if ( preg_match( '/^(\=)?(\S*)\s+(.*)$/i', $data, $matches) )
+      if ( preg_match( '/^(\=)?(\S*)(.*)$/i', $data, $matches) )
       {
-         //treat assignment as a vartag
+         //treat assignment as a vartag or freeform string concat
          if ( $matches[1] == '=' )
          {
-            $vartag = new HahVarTag( trim($matches[3]) );
-            
-            if ( !empty($matches[2]) )
-               $this->addAssignmentFilter( $vartag, $matches[2] );         
-            
-            $node->addChild( $vartag ); 
+            if ( trim($matches[3]) == '' )
+            {
+               //treat like concat, turn off engine until outdent is encountered
+               $this->turnOffEngine('');
+            }
+            else
+            {
+               //treat like a vartag
+               $vartag = new HahVarTag( trim($matches[3]) );
+               
+               if ( !empty($matches[2]) )
+                  $this->addAssignmentFilter( $vartag, $matches[2] );         
+               
+               $node->addChild( $vartag ); 
+            }
          }
          else //treat as normal text
          {
@@ -1131,7 +1154,7 @@ class HahDocument extends HahNode
       }
       
       //chomp off attributes from data line//
-	  $len = 2 + ( isset($atts[0]) ? strlen($atts[0]) : 0 );
+	   $len = 2 + ( isset($atts[0]) ? strlen($atts[0]) : 0 );
       $data = substr( $data, $len );
    }
    
@@ -1306,7 +1329,6 @@ class HahTag extends HahNode
    public function __toString()
    {
       $indent = $this->getIndent();
-      $closed = ( !$this->hasChildren() && $this->value == '' && !preg_match(HAH_NONE_SINGLE_TAGS,$this->name) );
 
       $output = ($this->parent && $this->parent->isSingular() ? '' : $indent ) . '<' . $this->name;
       
@@ -1324,7 +1346,7 @@ class HahTag extends HahNode
          }
       }
       
-      if ( $closed ) return $output .= ' />';
+      if ( preg_match(HAH_VOID_ELEMENTS,$this->name) ) return $output .= ' />';
       
       $output .= '>' .  $this->value;
       
