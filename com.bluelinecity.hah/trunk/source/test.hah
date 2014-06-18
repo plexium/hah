@@ -44,6 +44,14 @@ html
       span sam
     - while( false )
     
+    span
+    input
+    
+    img( src="nothing.jpg" )
+    p=
+      THis is a freeform chunk of text and will
+      prolly break right now.
+    
     div
       !test.php
     div
