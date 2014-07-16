@@ -42,7 +42,7 @@ if ( !defined('HAH_VOID_ELEMENTS') )
    define('HAH_VOID_ELEMENTS',"/area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr/i");
    
 if ( !defined('HAH_VERSION') )
-   define('HAH_VERSION',"1.3");
+   define('HAH_VERSION',"1.4");
 
 if ( !defined('HAH_ASSETS') )
    define('HAH_ASSETS', dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR . 'haha' . DIRECTORY_SEPARATOR);
