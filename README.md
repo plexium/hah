@@ -43,49 +43,49 @@ Here's a small example of a HAH document.
 
 This HAH document will produce the following code.
 
-  <!DOCTYPE HTML>
-  <html>
-    <head>
-      <title>My example page</title>
-      <link href="styles.css" type="text/css" rel="stylesheet" />
-      <script src="functions.js" type="text/javascript"></script>
-    </head>
-    <body>
-      <div id="page">
-        <div id="header">
-          <img src="banner.png" border="0" alt="My example Page" />
-          <?php 
-            $__subhahdoc = new HahDocument('.topmenu.hah'); 
-            $__subhahdoc->set('color',"#fff"); 
-            $__subhahdoc->set('pagetype',$pagetype); 
-            echo $__subhahdoc; unset($__subhahdoc);  
-          ?>
-          <?php if (HahNode::pick($special_message) != '') { ?>
-            <div id="message">
-              <?php echo HahNode::pick($special_message); ?>
+      <!DOCTYPE HTML>
+      <html>
+        <head>
+          <title>My example page</title>
+          <link href="styles.css" type="text/css" rel="stylesheet" />
+          <script src="functions.js" type="text/javascript"></script>
+        </head>
+        <body>
+          <div id="page">
+            <div id="header">
+              <img src="banner.png" border="0" alt="My example Page" />
+              <?php 
+                $__subhahdoc = new HahDocument('.topmenu.hah'); 
+                $__subhahdoc->set('color',"#fff"); 
+                $__subhahdoc->set('pagetype',$pagetype); 
+                echo $__subhahdoc; unset($__subhahdoc);  
+              ?>
+              <?php if (HahNode::pick($special_message) != '') { ?>
+                <div id="message">
+                  <?php echo HahNode::pick($special_message); ?>
+                </div>
+              <?php } ?>
             </div>
+            <div id="main" class="left">
+              <h1><?php echo $welcome_message; ?></h1>
+              <p>Here's a list pages on the site</p>
+              <ul>                      
+                <?php foreach ( $pages as $page ) { ?>
+                  <li><?php echo $page; ?></li>
+                <?php } ?>
+              </ul>
+            </div>
+            <div id="footer">         
+              <p>This is the <em>footer</em> for my example page.</p>
+            </div>
+          </div>
+          <?php if (( $loggedin )) { ?>
+            <span><?php echo "You are logged in as " . $username; ?></span>
+          <?php } else { ?>
+            <a href="login">Login Here</a>
           <?php } ?>
-        </div>
-        <div id="main" class="left">
-          <h1><?php echo $welcome_message; ?></h1>
-          <p>Here's a list pages on the site</p>
-          <ul>                      
-            <?php foreach ( $pages as $page ) { ?>
-              <li><?php echo $page; ?></li>
-            <?php } ?>
-          </ul>
-        </div>
-        <div id="footer">         
-          <p>This is the <em>footer</em> for my example page.</p>
-        </div>
-      </div>
-      <?php if (( $loggedin )) { ?>
-        <span><?php echo "You are logged in as " . $username; ?></span>
-      <?php } else { ?>
-        <a href="login">Login Here</a>
-      <?php } ?>
-    </body>
-  </html>
+        </body>
+      </html>
   
 This example shows a byte reduction from 1,337 to 627. Of course size 
 is not the problem HAH is trying to address. HAH is concerned with 
