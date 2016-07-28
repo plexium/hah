@@ -120,7 +120,8 @@ There's no need to use special characters to denote an HTML tag. The first non-s
           body
             h1 My Hah Page
             p Some content for my Hah page paragraph.
-        The content of each html element is what ever follows it.
+
+The content of each html element is what ever follows it.
 
 #### DIV Classes and Id's
 
@@ -223,10 +224,11 @@ With version 1.3 you can now directly echo out PHP variables without having to u
 
 Here's a list of the supported attributes you can specify.
 
-date="dateformat"
-money="true"
-list="ul|ol|dl"
-table="table-html-id"
+* date="dateformat"
+* money="true"
+* list="ul|ol|dl"
+* table="table-html-id"
+
 The table attribute uses the first row as the header. The definition list (dl) will use array keys as the definition term element (dt). You can also create custom single parameter functions in the attributes list. Let's say you have a function named colorize($var) you can pass the variable through it by adding colorize="true".
 
 #### Raw Code
