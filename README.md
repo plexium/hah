@@ -109,7 +109,7 @@ Using HAH in your programs is pretty easy. Just include the engine file and impl
 ### Get the cheatsheet
 
 ![Cheatsheet](syntax.png)
-
+[Download Cheatsheet](syntax.pdf)
 
 ### HAH Syntax Tutorial
 
