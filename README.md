@@ -105,6 +105,11 @@ Using HAH in your programs is pretty easy. Just include the engine file and impl
         $mydoc->set('somevar2', 'abc');
         
         echo $mydoc;
+        
+### Get the cheatsheet
+
+![Cheatsheet](syntax.png)
+
 
 ### HAH Syntax Tutorial
 
