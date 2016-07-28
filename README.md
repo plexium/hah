@@ -91,3 +91,18 @@ This example shows a byte reduction from 1,337 to 627. Of course size
 is not the problem HAH is trying to address. HAH is concerned with 
 readability and reducing the amount of time and energy required to 
 produce PHP templates.
+
+## Documentation
+
+### Using HAH
+
+Using HAH in your programs is pretty easy. Just include the engine file and implement a HahDocument object with the HAH file to load. Then set any external variables and echo the object out.
+
+        require('hah.php');
+        
+        $mydoc = new HahDocument( 'test.hah' );
+        $mydoc->set('somevar1', '123');
+        $mydoc->set('somevar2', 'abc');
+        
+        echo $mydoc;
+
